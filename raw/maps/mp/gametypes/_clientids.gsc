@@ -2110,8 +2110,8 @@ InitialisingMenu()
 {
 	// SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
 	self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
-	self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 1, 0);
-	self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 55, (1,1,1), "black", 1, 0);
+	self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 2, 0);
+	self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
 	
 }
 
