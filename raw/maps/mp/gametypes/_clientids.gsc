@@ -286,7 +286,6 @@ MenuStructure()
         self MenuOption("map teleports", 1, "lcsihz window", ::TeleportSpot, (2904.93, 105.427, 456.125));
         self MenuOption("map teleports", 2, "main balcony", ::TeleportSpot, (4144.63, 510.959, 456.125));
     }
-	
 	else if( getdvar("mapname") == "mp_russainbase")
     {
         self MainMenu("map teleports", "teleport menu");
@@ -294,6 +293,99 @@ MenuStructure()
         self MenuOption("map teleports", 1, "main ladder", ::TeleportSpot, (-1471.34, 388.245, 454.125));
         self MenuOption("map teleports", 2, "silo ladder", ::TeleportSpot, (1891.12, -108.359, 192.125));
 		self MenuOption("map teleports", 3, "spawn window", ::TeleportSpot, (1258.16, 1042.34, 160.125));
+    }
+	else if( getdvar("mapname") == "mp_discovery")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (-2092.58, -137.944, 199.984));
+        self MenuOption("map teleports", 1, "main ladder", ::TeleportSpot, (-1237.89, -572.892, 56.125));
+        self MenuOption("map teleports", 2, "back ladder", ::TeleportSpot, (-275.461, -2656.62, 140.358));
+		self MenuOption("map teleports", 3, "middle bridge", ::TeleportSpot, (-641, 215.914, 103.016));
+		self MenuOption("map teleports", 4, "out of map back drop", ::TeleportSpot, (-1371.63, 2713.08, 415.799));
+    }
+	else if( getdvar("mapname") == "mp_kowloon")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main ladder", ::TeleportSpot, (343.154, 220.556, 309.125));
+        self MenuOption("map teleports", 1, "zipline 1", ::TeleportSpot, (23.6409, 617.484, 196.125));
+        self MenuOption("map teleports", 2, "zipline 2", ::TeleportSpot, (916.805, 938.996, 121.125));
+		self MenuOption("map teleports", 3, "back ladder", ::TeleportSpot, (-1638.45, -899.565, -37.875));
+		self MenuOption("map teleports", 4, "fortune suicide", ::TeleportSpot, (-1703.46, 992.488, -151.875));
+    }
+	else if( getdvar("mapname") == "mp_stadium")
+    {
+        self MainMenu("map teleports", "teleport menu");
+       self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (-46.0432, 1852.46, 163.955));
+        self MenuOption("map teleports", 1, "main ladder", ::TeleportSpot, (-929.907, 128.853, 208.125));
+        self MenuOption("map teleports", 2, "catwalk", ::TeleportSpot, (601.813, 1103.55, 189.909));
+		self MenuOption("map teleports", 3, "office balcony", ::TeleportSpot, (1334.88, 2056.56, 192.027));
+		self MenuOption("map teleports", 4, "hockey rink", ::TeleportSpot, (-1891.53, 1925.9, 237.94));
+    }
+	else if( getdvar("mapname") == "mp_gridlock")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "left ladder", ::TeleportSpot, (-905.59, -266.462, 245.266));
+        self MenuOption("map teleports", 1, "right ladder", ::TeleportSpot, (-970.571, 462.086, 245.125));
+        self MenuOption("map teleports", 2, "motel stairs", ::TeleportSpot, (-1600.44, 1519.11, 167.898));
+		self MenuOption("map teleports", 3, "off the bridge", ::TeleportSpot, (273.076, 560.482, 130.29));
+		self MenuOption("map teleports", 4, "geens clips", ::TeleportSpot, (1157.25, 1075.63, -6.76911));
+    }
+	else if( getdvar("mapname") == "mp_hotel")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "suicide spot 1", ::TeleportSpot, (-279.562, 755.969, 101.894));
+        self MenuOption("map teleports", 1, "suicide spot 2", ::TeleportSpot, (6580.8, 179.498, 101.976));
+        self MenuOption("map teleports", 2, "suicide spot 3", ::TeleportSpot, (1400.82, -2214.11, -45.5907));
+		self MenuOption("map teleports", 3, "window 1", ::TeleportSpot, (4109.57, -437.493, 184.125));
+		self MenuOption("map teleports", 4, "window 2", ::TeleportSpot, (1631.99, -316.669, 160.125));
+    }
+	else if( getdvar("mapname") == "mp_outskirts")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (1494.41, 674.657, 410.056));
+        self MenuOption("map teleports", 1, "ladder 1", ::TeleportSpot, (-363.279, -139.32, 198.12));
+        self MenuOption("map teleports", 2, "ladder 2", ::TeleportSpot, (207.641, -976.037, 152.125));
+    }
+	else if( getdvar("mapname") == "mp_zoo")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (1024.53, 148.779, 142.125));
+        self MenuOption("map teleports", 1, "ladder 1", ::TeleportSpot, (1266.04, 627.337, 146.125));
+        self MenuOption("map teleports", 2, "ladder 2", ::TeleportSpot, (-1255.38, -849.195, -5.875));
+    }
+	else if( getdvar("mapname") == "mp_drivein")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (-59.2954, 1076.22, 252.125));
+        self MenuOption("map teleports", 1, "watching Silver Screen by Max", ::TeleportSpot, (30.0857, -753.733, 200.125));
+        self MenuOption("map teleports", 2, "ive lost my mind", ::TeleportSpot, (-1560.89, -814.222, 218.125));
+    }
+	else if( getdvar("mapname") == "mp_area51")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "window spot 1", ::TeleportSpot, (-1641.6, 1065.83, 184.625));
+        self MenuOption("map teleports", 1, "window spot 2", ::TeleportSpot, (-736.604, 441.641, 156.125));
+		self MenuOption("map teleports", 2, "window spot 3", ::TeleportSpot, (-368.359, 2016.3, 164.125));
+		self MenuOption("map teleports", 3, "window spot 4", ::TeleportSpot, (833.108, 403.641, 196.125));
+		self MenuOption("map teleports", 4, "random spot", ::TeleportSpot, (668.576, -1613.22, 265.125));
+		self MenuOption("map teleports", 5, "ladder spot 1", ::TeleportSpot, (607.473, -1887.64, 229.125));
+		self MenuOption("map teleports", 6, "ladder spot 2", ::TeleportSpot, (-1593.01, -1028.58, 99.125));
+    }
+	else if( getdvar("mapname") == "mp_golfcourse")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (-1351.6, -1145.11, 20.822));
+        self MenuOption("map teleports", 1, "high spot 1", ::TeleportSpot, (898.527, 680.206, 31.7));
+        self MenuOption("map teleports", 2, "high spot 2", ::TeleportSpot, (364.068, -152.901, -27.8634));
+		self MenuOption("map teleports", 3, "suicide spot", ::TeleportSpot, (-3295.99, 1407.71, -179.875));
+		self MenuOption("map teleports", 4, "out of map spot", ::TeleportSpot, (-1616.01, -2658.39, 136.125));
+    }
+	else if( getdvar("mapname") == "mp_silo")
+    {
+        self MainMenu("map teleports", "teleport menu");
+        self MenuOption("map teleports", 0, "main trickshot", ::TeleportSpot, (656.123, 2474.75, 373.289));
+		self MenuOption("map teleports", 1, "window spot 1", ::TeleportSpot, (-726.367, 596.721, 387.817));
+        self MenuOption("map teleports", 2, "window spot 2", ::TeleportSpot, (-725.957, -628.974, 220.803));
     }
     else
     {
