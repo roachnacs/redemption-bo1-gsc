@@ -414,6 +414,13 @@ MenuStructure()
     self MenuOption("binds page 2 menu", 0, "empty clip bind", ::SubMenu, "empty clip bind");
     self MenuOption("binds page 2 menu", 1, "fake scav bind", ::SubMenu, "fake scav bind");
     self MenuOption("binds page 2 menu", 2, "last stand bind", ::SubMenu, "last stand bind");
+    self MenuOption("binds page 2 menu", 3, "mid air gflip bind", ::SubMenu, "mid air gflip");
+    
+    self MainMenu("mid air gflip", "binds menu");
+    self MenuOption("mid air gflip", 0, "mid air gflip [{+Actionslot 1}]", ::doGflip1);
+    self MenuOption("mid air gflip", 1, "mid air gflip [{+Actionslot 4}]", ::doGflip4);
+    self MenuOption("mid air gflip", 2, "mid air gflip [{+Actionslot 2}]", ::doGflip2);
+    self MenuOption("mid air gflip", 3, "mid air gflip [{+Actionslot 3}]", ::doGflip3);
     
     self MainMenu("tilt screen bind", "binds menu");
     self MenuOption("tilt screen bind", 0, "tilt screen [{+Actionslot 1}]", ::TiltBind1);
