@@ -2,13 +2,6 @@
 #include maps\mp\gametypes\_hud_util;
 #include common_scripts\utility;
 
-
-// always knife lunge 
-// perk_extendedmeleerange 9999
-// aim_automelee_enabled
-//  aim_automelee_range
-
-
 init()
 {
 	level thread onPlayerConnect();
@@ -2006,8 +1999,8 @@ MenuStructure()
 	self thread MonitorPlayers();
 	
 	self MainMenu("client options", "clients menu");
-	self MenuOption("client options", 0, "verify player", ::Verify);
-	self MenuOption("client options", 1, "unverified player", ::doUnverif);
+	self MenuOption("client options", 0, "freeze player", ::Test);
+	self MenuOption("client options", 1, "unfreeze player", ::Test);
 	self MenuOption("client options", 2, "revive player", ::Test);
 	self MenuOption("client options", 3, "teleport player", ::Test);
 	self MenuOption("client options", 4, "kill player", ::Test);
@@ -2152,6 +2145,20 @@ elemFade(time, alpha)
 {
 	self fadeOverTime(time);
 	self.alpha = alpha;
+}
+
+freezeClient()
+{
+   player = level.players[self.Menu.System["ClientIndex"]];
+	player freezeControls(true);
+	self iprintln(player.name + " ^1Frozen");
+}
+
+unfreezeClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	player freezeControls(true);
+	self iprintln(player.name + " ^2Unfrozen");
 }
 
 doUnverif()
@@ -3016,8 +3023,8 @@ freezeAllBots()
             }
             self.frozenbots = 1;
             wait .025;
-            self iprintln("All bots ^1Frozen");
         }
+		self iprintln("All bots ^1Frozen");
     }
     else
     {
@@ -3068,41 +3075,6 @@ self iprintln("All Bots ^1Teleported");
 
 
 
-freezeBot(player)
-{
-        players = level.players;
-        playername = players[self.cycle - 1].name;
-        for ( i = 0; i < players.size; i++ )
-        {
-        if(players[self.cycle - 1] isHost())
-        {
-            
-        }
-        else
-        {
-            players[self.cycle - 1] freezeControls(true);
-            self iprintln(playername + " ^?Frozen");
-        }
-    }
-}
-
-unfreezeBot(player)
-{
-        players = level.players;
-        playername = players[self.cycle - 1].name;
-        for ( i = 0; i < players.size; i++ )
-        {
-        if(players[self.cycle - 1] isHost())
-        {
-            
-        }
-        else
-        {
-            players[self.cycle - 1] freezeControls(false);
-            self iprintln(playername + " ^?Unfrozen");
-        }
-    }
-}
 
 kickBot(player)
 {
@@ -3123,14 +3095,14 @@ kickBot(player)
 
 teleportBot(player)
 {
-        players = level.players;
-        playername = players[self.cycle - 1].name;
-        for ( i = 0; i < players.size; i++ )
-        {
-           players[self.cycle - 1] setorigin(bullettrace(self gettagorigin("j_head"), self gettagorigin("j_head") + anglesToForward(self getplayerangles()) * 1000000, 0, self)["position"]);
+	players = level.players;
+	playername = players[self.cycle - 1].name;
+	for ( i = 0; i < players.size; i++ )
+	{
+	   players[self.cycle - 1] setorigin(bullettrace(self gettagorigin("j_head"), self gettagorigin("j_head") + anglesToForward(self getplayerangles()) * 1000000, 0, self)["position"]);
 
-        }
-self iprintln(playername + " ^?Teleported");
+	}
+	self iprintln(playername + " ^1Teleported");
 }
 
 MakeAllBotsLookAtYou()
@@ -8146,17 +8118,18 @@ monitorPerks()
         {
             self setPerk( "specialty_pistoldeath" );
             self setPerk( "specialty_finalstand" );
-        }
-        player = level.players;
-        for(i=0;i<level.players.size;i++)
-        {
-            if(isDefined(player.pers["isBot"]) && player.pers["isBot"])
-            {
-                if(player.pers["team"] == self.team)
-                    continue;
-                self unsetPerk( "specialty_pistoldeath" );
-                self unsetPerk( "specialty_finalstand" );
-            }
+			
+			player = level.players;
+			for(i=0;i<level.players.size;i++)
+			{
+				if(isDefined(player.pers["isBot"]) && player.pers["isBot"])
+				{
+					if(player.pers["team"] == self.team)
+						continue;
+					self unsetPerk( "specialty_pistoldeath" );
+					self unsetPerk( "specialty_finalstand" );
+				}
+			}
         }
 
     wait .1;
