@@ -25,7 +25,7 @@ BuildMenu()
             {
                 self.Menu.System["MenuCurser"] = 0;
                 self MenuClosing();
-                wait 1;
+                wait 0.2;
             }
         }
         else if (self actionslotonebuttonpressed() && self.MenuOpen == true)
@@ -36,7 +36,7 @@ BuildMenu()
                 self.Menu.System["MenuCurser"] = self.Menu.System["MenuTexte"][self.Menu.System["MenuRoot"]].size - 1;
             }
             self.Menu.Material["Scrollbar"] elemMoveY(.2, 35 + (self.Menu.System["MenuCurser"] * 15.6));
-            wait.2;
+            wait.05;
         }
         else if (self actionslottwobuttonpressed() && self.MenuOpen == true)
         {
@@ -46,7 +46,7 @@ BuildMenu()
                 self.Menu.System["MenuCurser"] = 0;
             }
             self.Menu.Material["Scrollbar"] elemMoveY(.2, 35 + (self.Menu.System["MenuCurser"] * 15.6));
-            wait.2;
+            wait.05;
         }
         else if(self usebuttonpressed() && self.MenuOpen == true)
         {
@@ -138,14 +138,15 @@ MenuDeath()
     self.Menu.Material["Scrollbar"] destroy();
     self MenuClosing();
 }
+
 InitialisingMenu()
 {
-    // SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
-    self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
-    self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 2, 0);
-    self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
-    
+
+        self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
+        self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, (0.6468253968253968, 0, 0.880952380952381), "white", 2, 0);
+        self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
 }
+    // SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
 
 MenuOpening()
 {
