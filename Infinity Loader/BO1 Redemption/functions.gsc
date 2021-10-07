@@ -96,7 +96,6 @@ Test()
 }
 
 
-
 TeleportSpot(coords)
 {
     self setorigin(coords);
@@ -886,6 +885,10 @@ freezeAllBots()
             if(IsDefined(player.pers[ "isBot" ]) && player.pers["isBot"])
             {
                 player freezeControls(false);
+                setDvar("testClients_doAttack", 1);
+                setDvar("testClients_doCrouch", 1);
+                setDvar("testClients_doMove", 1);
+                setDvar("testClients_doReload", 1);
             }
         }
         self.frozenbots = 0;
@@ -1974,7 +1977,7 @@ autoProne()
         self iPrintln("Auto Prone: ^2On");
         self endon("disconnect");
         level waittill("game_ended");
-        self thread LayDownNigger();
+        self thread LayDownBuddy();
         self.AutoProne = 1;
     }
     else
@@ -1985,7 +1988,7 @@ autoProne()
     }
 }
 
-LayDownNigger()
+LayDownBuddy()
 {
     self endon("notprone");
     self endon("disconnect");
@@ -4961,6 +4964,7 @@ OMA()
     wait 3;
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
+    
 }
 
 ChangingKit()
@@ -4987,7 +4991,7 @@ OMADouble()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
-    self switchToWeapon(self.OMAWeapon);
+    self switchToWeapon(self.OMAWeapon);    
     wait 0.1;
     self thread ChangingKit2();
     wait 3;
@@ -5880,109 +5884,114 @@ forceLastStand()
     wait .5;
 }
 
-monitorPerks()
+doGflip1()
 {
-    self endon("disconnect");
-    for(;;)
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Gflip))
     {
-
-        
-        self waittill_either( "spawned_player", "changed_class" );
-        wait .5;
-
-        // Perk Slot 1 //
-        if(self hasPerk( "specialty_movefaster" )) // Lightweight
+        self iPrintLn("Mid air gflip bind activated, press [{+Actionslot 1}]");
+        self.Gflip = true;
+        while(isDefined(self.Gflip))
         {
-            self setPerk( "specialty_fallheight" );
-            self setPerk( "specialty_movefaster" );
-        }
-        if(self hasPerk( "specialty_scavenger" )) // Scavenger
-        {
-            self setPerk( "specialty_extraammo" );
-            self setPerk( "specialty_scavenger" );
-        }
-        if(self hasPerk( "specialty_gpsjammer" )) // Ghost
-        {
-            self setPerk( "specialty_gpsjammer" );
-            self setPerk( "specialty_nottargetedbyai" );
-            self setPerk( "specialty_noname" );
-        }
-        if(self hasPerk( "specialty_flakjacket" )) // Flak Jacket
-        {
-            self setPerk( "specialty_flakjacket" );
-            self setPerk( "specialty_flakjacket" );
-            self setPerk( "specialty_flakjacket" );
-        }
-        if(self hasPerk( "specialty_killstreak" )) // Hardline
-        {
-            self setPerk( "specialty_killstreak" );
-            self setPerk( "specialty_gambler" );
-        }
-
-        // Perk Slot 2 //
-        if(self hasPerk( "specialty_bulletaccuracy" )) // Steady Aim
-        {
-            self setPerk( "specialty_fallheight" );
-            self setPerk( "specialty_sprintrecovery" );
-            self setPerk( "specialty_fastmeleerecovery" );
-        }
-        if(self hasPerk( "specialty_holdbreath" )) // Scout
-        {
-            self setPerk( "specialty_holdbreath" );
-            self setPerk( "specialty_fastweaponswitch" );
-        }
-        if(self hasPerk( "specialty_fastreload" )) // Sleight of Hand
-        {
-            self setPerk( "specialty_fastreload" );
-            self setPerk( "specialty_fastads" );
-        }
-        if(self hasPerk( "specialty_twoattach" )) // War Lord
-        {
-            self setPerk("specialty_twoattach");
-            self setPerk("specialty_twogrenades");
-        }
-
-        // Perk Slot 3 //
-        if(self hasPerk( "specialty_longersprint" )) // Marathon
-        {
-            self setPerk( "specialty_longersprint" );
-            self setPerk( "specialty_unlimitedsprint" );
-        }
-        if(self hasPerk( "specialty_quieter" )) // Ninja
-        {
-            self setPerk( "specialty_quieter" );
-            self setPerk( "specialty_loudenemies" );
-        }
-        if(self hasPerk( "specialty_showenemyequipment" )) // Hacker
-        {
-            self setPerk( "specialty_showenemyequipment" );
-            self setPerk( "specialty_detectexplosive" );
-            self setPerk( "specialty_disarmexplosive" );
-            self setPerk( "specialty_nomotionsensor" );
-        }
-        if(self hasPerk( "specialty_gas_mask" )) // Tactical Mask
-        {
-            self setPerk( "specialty_shades" );
-            self setPerk( "specialty_stunprotection" );
-        }
-        if(self hasPerk( "specialty_pistoldeath" )) // last chance
-        {
-            self setPerk( "specialty_pistoldeath" );
-            self setPerk( "specialty_finalstand" );
-            
-            player = level.players;
-            for(i=0;i<level.players.size;i++)
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
             {
-                if(isDefined(player.pers["isBot"]) && player.pers["isBot"])
-                {
-                    if(player.pers["team"] == self.team)
-                        continue;
-                    self unsetPerk( "specialty_pistoldeath" );
-                    self unsetPerk( "specialty_finalstand" );
-                }
+                self thread MidAirGflip();
             }
-        }
-
-    wait .1;
-    }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Gflip)) 
+    { 
+        self iPrintLn("Mid air gflip bind ^1deactivated");
+        self notify("stopProne1");
+        self.Gflip = undefined; 
+    } 
 }
+
+doGflip2()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Gflip))
+    {
+        self iPrintLn("Mid air gflip bind activated, press [{+Actionslot 2}]");
+        self.Gflip = true;
+        while(isDefined(self.Gflip))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread MidAirGflip();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Gflip)) 
+    { 
+        self iPrintLn("Mid air gflip bind ^1deactivated");
+        self notify("stopProne1");
+        self.Gflip = undefined; 
+    } 
+}
+
+doGflip3()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Gflip))
+    {
+        self iPrintLn("Mid air gflip bind activated, press [{+Actionslot 3}]");
+        self.Gflip = true;
+        while(isDefined(self.Gflip))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread MidAirGflip();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Gflip)) 
+    { 
+        self iPrintLn("Mid air gflip bind ^1deactivated");
+        self notify("stopProne1");
+        self.Gflip = undefined; 
+    } 
+}
+
+doGflip4()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Gflip))
+    {
+        self iPrintLn("Mid air gflip bind activated, press [{+Actionslot 4}]");
+        self.Gflip = true;
+        while(isDefined(self.Gflip))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread MidAirGflip();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Gflip)) 
+    { 
+        self iPrintLn("Mid air gflip bind ^1deactivated");
+        self notify("stopProne1");
+        self.Gflip = undefined; 
+    } 
+}
+
+
+MidAirGflip()
+{
+    self endon("stopProne1");
+    self setStance("prone");
+    wait 0.01;
+    self setStance("prone");
+}
+
+
+
