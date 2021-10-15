@@ -23,4 +23,13 @@ Carepackage stalls only work in gsc version not the infinity loader version (eas
 Let me know if you fin anymore, join this discord to get intouch with me and see other menus releasing or in developement and for updates to this menu
 
 
+## Change Log
+
+1. Mid air gflip bind added
+2. Last stand bind fixed so that current gun will be kept and you can self revive via cowards way out
+3. extra options on bolt movement and OMA bind
+4. fixed verification menu ( can now verify and unverify clients )
+5. Rmala moved to trickshot panel and now can be a equipment flicker or mw2 style rmala
+
+
 https://discord.gg/jqYDedzMUs
