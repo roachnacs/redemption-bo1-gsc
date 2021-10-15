@@ -36,7 +36,6 @@ UnverifMe()
     self.VIP = false;
     self.Admin = false;
     self.CoHost = false;
-    self suicide();
 }
 
 Verify()
@@ -94,6 +93,7 @@ Test()
 {
     self iPrintln("^1Coming soon");
 }
+
 
 
 TeleportSpot(coords)
@@ -885,10 +885,6 @@ freezeAllBots()
             if(IsDefined(player.pers[ "isBot" ]) && player.pers["isBot"])
             {
                 player freezeControls(false);
-                setDvar("testClients_doAttack", 1);
-                setDvar("testClients_doCrouch", 1);
-                setDvar("testClients_doMove", 1);
-                setDvar("testClients_doReload", 1);
             }
         }
         self.frozenbots = 0;
@@ -1791,20 +1787,29 @@ LAG1BAR()
 {
     self endon("game_ended");
     self endon( "disconnect" );
-    if(level.slomo == 0)
+    if(level.LagShit == 0)
     {
-        level.slomo = 1;
-        self.SLOLOL = true;
-        setDvar("sv_padpackets", 50000);
-        wait 0.5;
-        self iPrintln("Lag ^2On");
+        level.LagShit = 1;
+        self thread fakeLag();
     }
     else
     {
-        level.slomo = 0;
+        level.LagShit = 0;
         setDvar("sv_padpackets", 0);
-        self.SLOLOL = false;
+        self notify("stopLagging");
+        self.LagShit = false;
         self iPrintln("Lag ^1Off");
+    }
+}
+
+fakeLag()
+{
+    self endon ( "disconnect" );
+    self endon("stopLagging");
+    for ( ;; )
+    {
+        setDvar("sv_padpackets", "20000");
+        self setClientDvar("sv_padpackets", "20000");
     }
 }
 
@@ -1977,7 +1982,7 @@ autoProne()
         self iPrintln("Auto Prone: ^2On");
         self endon("disconnect");
         level waittill("game_ended");
-        self thread LayDownBuddy();
+        self thread ProneBuddy();
         self.AutoProne = 1;
     }
     else
@@ -1988,7 +1993,7 @@ autoProne()
     }
 }
 
-LayDownBuddy()
+ProneBuddy()
 {
     self endon("notprone");
     self endon("disconnect");
@@ -2047,21 +2052,46 @@ laddermovement()
 
 softLand()
 {
-    self endon("game_ended");
-    self endon( "disconnect" );
-    if( self.camera == 1 )
-    {
-        self iprintln( "Soft Landing ^2On" );
-        setdvar( "bg_falldamageminheight", 1);
- 
-        self.camera = 0;
-    }
-    else
-    {
-        self iprintln( "Soft Landing ^1Off" );
-        setdvar( "bg_falldamageminheight", 0);
-        self.camera = 1;
-    }
+    self iprintln("softland on after round ends");
+    setdvar( "player_sprintCameraBob", 0.5 );
+    setdvar( "bg_weaponBobAmplitudeBase", 0.16 );
+    setdvar( "bg_weaponBobAmplitudeDucked", 0.045 );
+    setdvar( "bg_weaponBobAmplitudeProne", 0.02 );
+    setdvar( "bg_weaponBobAmplitudeRoll", 1.5 );
+    setdvar( "bg_weaponBobAmplitudeSprinting", 0.02 );
+    setdvar( "bg_weaponBobAmplitudeStanding", 0.055 );
+    setdvar( "bg_weaponBobLag", 0.25 );
+    setdvar( "bg_weaponBobMax", 8 );
+    setdvar( "phys_disableEntsAndDynEntsCollision ", 0 );
+    setdvar( "phys_buoyancy  ", 0 );
+    level waittill("game_ended");
+    setdvar( "bg_weaponBobAmplitudeBase", 0.001  );
+    setdvar( "bg_weaponBobAmplitudeDucked", 0.001  );
+    setdvar( "bg_weaponBobAmplitudeProne", 0.001  );
+    setdvar( "bg_weaponBobAmplitudeRoll", 0.001 );
+    setdvar( "bg_weaponBobAmplitudeStanding", 0.001  );
+    setdvar( "bg_weaponBobLag", 0.001 );
+    setdvar( "bg_weaponBobMax", 0.001 );
+    setdvar( "phys_disableEntsAndDynEntsCollision", 1 );
+    setdvar( "phys_buoyancy", 1 );
+    setdvar( "bg_viewBobAmplitudeRoll", 0.001);
+    setdvar( "bg_viewBobAmplitudeProne", 0.001);
+    setdvar( "bg_viewKickMax", 0.001);
+    setdvar( "cg_gun_ofs_f", 0.001);
+    setdvar( "cg_gun_ofs_r", 0.001);
+    setdvar( "cg_gun_ofs_u", 0.001);
+    setdvar( "cg_proneFeetCollisionHull", 0);
+    setdvar( "phys_buoyancyDistanceCutoff", 0.001);
+    setdvar( "phys_buoyancyFastComputation", 0);
+    setdvar( "phys_buoyancyRippleFrequency", 0.001);
+    setdvar( "phys_buoyancyRippleVariance", 0.001);
+    setdvar( "phys_debugDangerousRigidBodies", 0);
+    setdvar( "phys_drawCollisionObj", 0);
+    setdvar( "phys_entityCollision", 0);
+    setdvar( "phys_impact_fx", 0);
+    setdvar( "phys_impact_render", 0);
+    setdvar( "phys_ragdoll_buoyancy", 0);
+    setdvar( "phys_userRigidBodies", 0);
 }
 
 
@@ -4296,10 +4326,10 @@ changeclassbind(bulletType)
 changeclasscanbind()
 {
     self thread doChangeClass();
-    wait 0.01;
     self.nova = self getCurrentweapon();
     ammoW     = self getWeaponAmmoStock( self.nova );
     ammoCW    = self getWeaponAmmoClip( self.nova );
+    wait 0.006;
     self TakeWeapon(self.nova);
     self GiveWeapon( self.nova);
     self setweaponammostock( self.nova, ammoW );
@@ -4958,13 +4988,15 @@ OMA()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+    shaxMODEL = spawn( "script_model", self.origin );
+    self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit();
-    wait 3;
+    wait 1;
+    self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
-    
 }
 
 ChangingKit()
@@ -4972,16 +5004,16 @@ ChangingKit()
     self endon("death");
     self.ChangingKit = createSecondaryProgressBar();
     self.KitText = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
         self.ChangingKit.color     = (0, 0, 0);
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -4991,10 +5023,13 @@ OMADouble()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
-    self switchToWeapon(self.OMAWeapon);    
+    shaxMODEL = spawn( "script_model", self.origin );
+    self PlayerLinkToDelta(shaxMODEL);
+    self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit2();
-    wait 3;
+    wait 1;
+    self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
 }
@@ -5006,9 +5041,9 @@ ChangingKit2()
     self.KitText      = createSecondaryProgressBarText();
     self.ChangingKit2 = createSecondaryProgressBar();
     self.KitText2     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -5016,14 +5051,14 @@ ChangingKit2()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 20);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
         self.ChangingKit2.color     = (0, 0, 0);
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -5035,10 +5070,13 @@ OMATriple()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+    shaxMODEL = spawn( "script_model", self.origin );
+    self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
-    wait 3;
+    wait 1;
+    self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
 }
@@ -5052,9 +5090,9 @@ ChangingKit3()
     self.KitText2     = createSecondaryProgressBarText();
     self.ChangingKit3 = createSecondaryProgressBar();
     self.KitText3     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -5062,7 +5100,7 @@ ChangingKit3()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 20);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -5070,14 +5108,14 @@ ChangingKit3()
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
         // 3rd one
-        self.ChangingKit3 updateBar(i / 60);
+        self.ChangingKit3 updateBar(i / 20);
         self.KitText3 setText("Booby Trapping Crate");
         self.ChangingKit3 setPoint("CENTER", "CENTER", 0, -15);
         self.KitText3 setPoint("CENTER", "CENTER", 0, -30);
         self.ChangingKit3.color     = (0, 0, 0);
         self.ChangingKit3.bar.color = self.BarColor;
         self.ChangingKit3.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -5734,7 +5772,6 @@ LastStandBind1()
     if(!isDefined(self.LastStand))
     {
         self iPrintLn("Last stand bind activated, press [{+Actionslot 1}]");
-        self iPrintLn("Only works when holding a secondary weapon (idek why)");
         self.LastStand = true;
         while(isDefined(self.LastStand))
         {
@@ -5884,6 +5921,113 @@ forceLastStand()
     wait .5;
 }
 
+monitorPerks()
+{
+    self endon("disconnect");
+    for(;;)
+    {
+
+        
+        self waittill_either( "spawned_player", "changed_class" );
+        wait .5;
+
+        // Perk Slot 1 //
+        if(self hasPerk( "specialty_movefaster" )) // Lightweight
+        {
+            self setPerk( "specialty_fallheight" );
+            self setPerk( "specialty_movefaster" );
+        }
+        if(self hasPerk( "specialty_scavenger" )) // Scavenger
+        {
+            self setPerk( "specialty_extraammo" );
+            self setPerk( "specialty_scavenger" );
+        }
+        if(self hasPerk( "specialty_gpsjammer" )) // Ghost
+        {
+            self setPerk( "specialty_gpsjammer" );
+            self setPerk( "specialty_nottargetedbyai" );
+            self setPerk( "specialty_noname" );
+        }
+        if(self hasPerk( "specialty_flakjacket" )) // Flak Jacket
+        {
+            self setPerk( "specialty_flakjacket" );
+            self setPerk( "specialty_flakjacket" );
+            self setPerk( "specialty_flakjacket" );
+        }
+        if(self hasPerk( "specialty_killstreak" )) // Hardline
+        {
+            self setPerk( "specialty_killstreak" );
+            self setPerk( "specialty_gambler" );
+        }
+
+        // Perk Slot 2 //
+        if(self hasPerk( "specialty_bulletaccuracy" )) // Steady Aim
+        {
+            self setPerk( "specialty_fallheight" );
+            self setPerk( "specialty_sprintrecovery" );
+            self setPerk( "specialty_fastmeleerecovery" );
+        }
+        if(self hasPerk( "specialty_holdbreath" )) // Scout
+        {
+            self setPerk( "specialty_holdbreath" );
+            self setPerk( "specialty_fastweaponswitch" );
+        }
+        if(self hasPerk( "specialty_fastreload" )) // Sleight of Hand
+        {
+            self setPerk( "specialty_fastreload" );
+            self setPerk( "specialty_fastads" );
+        }
+        if(self hasPerk( "specialty_twoattach" )) // War Lord
+        {
+            self setPerk("specialty_twoattach");
+            self setPerk("specialty_twogrenades");
+        }
+
+        // Perk Slot 3 //
+        if(self hasPerk( "specialty_longersprint" )) // Marathon
+        {
+            self setPerk( "specialty_longersprint" );
+            self setPerk( "specialty_unlimitedsprint" );
+        }
+        if(self hasPerk( "specialty_quieter" )) // Ninja
+        {
+            self setPerk( "specialty_quieter" );
+            self setPerk( "specialty_loudenemies" );
+        }
+        if(self hasPerk( "specialty_showenemyequipment" )) // Hacker
+        {
+            self setPerk( "specialty_showenemyequipment" );
+            self setPerk( "specialty_detectexplosive" );
+            self setPerk( "specialty_disarmexplosive" );
+            self setPerk( "specialty_nomotionsensor" );
+        }
+        if(self hasPerk( "specialty_gas_mask" )) // Tactical Mask
+        {
+            self setPerk( "specialty_shades" );
+            self setPerk( "specialty_stunprotection" );
+        }
+        if(self hasPerk( "specialty_pistoldeath" )) // last chance
+        {
+            self unsetPerk( "specialty_pistoldeath" );
+            self unsetPerk( "specialty_finalstand" );
+            
+            player = level.players;
+            for(i=0;i<level.players.size;i++)
+            {
+                if(isDefined(player.pers["isBot"]) && player.pers["isBot"])
+                {
+                    if(player.pers["team"] == self.team)
+                        continue;
+                    self unsetPerk( "specialty_pistoldeath" );
+                    self unsetPerk( "specialty_finalstand" );
+                }
+            }
+        }
+
+    wait .1;
+    }
+}
+
 doGflip1()
 {
     self endon ("disconnect");
@@ -5992,6 +6136,3 @@ MidAirGflip()
     wait 0.01;
     self setStance("prone");
 }
-
-
-

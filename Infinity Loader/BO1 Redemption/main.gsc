@@ -1,14 +1,15 @@
 #include maps\mp\_utility;
 #include maps\mp\gametypes\_hud_util;
+#include maps\mp\_laststand;
 #include common_scripts\utility;
 
 init()
 {
     level thread onPlayerConnect();
     setDvar("sv_cheats", 1);
-    setDvar("killcam_final", "1");
     level.prematchPeriod = 0;
-    precacheShader("hud_scavenger_pickup"); 
+    precacheShader("hud_scavenger_pickup");
+    level thread removeSkyBarrier();
 }
 
 onPlayerConnect()
@@ -22,8 +23,8 @@ onPlayerConnect()
         player.Admin = false;
         player.CoHost = false;
         player.MyAccess = "";
-        player thread monitorPerks();
         player thread changeClass();
+        player thread monitorPerks();
     }
 }
 onPlayerSpawned()
@@ -37,19 +38,48 @@ onPlayerSpawned()
         if(self isHost())
         {
             self freezecontrols(false);
-            self.Verified  = true;
+            self.Verified = true;
+            self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
+            self.OMAWeapon = "briefcase_bomb_mp";
+            self.BarColor  = (255, 255, 255);
+            self.VIP = true;
+            self.Admin = true;
+            self.CoHost = true;
+            self.boltspeed = 2;
+            self.ClassType = 1;
+            self.MyAccess = "^1Host";
+            self thread BuildMenu();
+        }
+        if(self.Verified == true)
+        {
+            self freezecontrols(false);
+            self.Verified = true;
+            self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
             self.OMAWeapon = "briefcase_bomb_mp";
             self.BarColor  = (255, 255, 255);
             self.boltspeed = 2;
             self.ClassType = 1;
-            self.MyAccess  = "^1Host";
+            self.MyAccess = "^2Verified";
             self thread BuildMenu();
         }
         else
         {
-            self.MyAccess = "";
+            self.MyAccess = "^5LOSER";
+            self freezecontrols(true);
+            self thread freezeAllBots();
+            self clearperks();
         }
     }
+}
+
+
+removeSkyBarrier()
+{
+    entArray=getEntArray();
+    for(i=0;i < entArray.size;i++)
+    {
+        if(isSubStr(entArray[i].classname,"trigger_hurt") && entArray[i].origin[2] > 180)entArray[i].origin = (0 , 0, 9999999);
+    }   
 }
 
 monitorPerks()

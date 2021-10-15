@@ -2,21 +2,24 @@ MenuStructure()
 {
     if (self.Verified == true)
     {
-    self MainMenu("redemption", undefined);
-    self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
-    self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
-    self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
-    self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
-    self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
-    self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
-    self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
-    self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
-    self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
-    self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
-    self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-    self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
-    self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
-    self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
+        self MainMenu("redemption", undefined);
+        self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
+        self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
+        self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
+        self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
+        self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
+        self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
+        self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
+        self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
+        self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
+        self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
+    }
+    if(self isHost())
+    {
+        self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
+        self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
+        self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
+        self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
     }
     
     self MainMenu("main menu", "redemption");
@@ -37,6 +40,7 @@ MenuStructure()
     self MenuOption("main menu", 14, "auto drop shot", ::autodropshot);
     self MenuOption("main menu", 15, "toggle uav", ::toggleuav);
     self MenuOption("main menu", 16, "suicide", ::forceLastStand);
+    self MenuOption("main menu", 17, "Open Keyboard", ::Keyboard, "Joe Mumma");
     
     self MainMenu("teleport menu", "redemption");
     self MenuOption("teleport menu", 0, "save position", ::savePosition);
@@ -303,7 +307,8 @@ MenuStructure()
     self MenuOption("trickshot menu", 5, "tilt screen left", ::doTiltLeft);
     self MenuOption("trickshot menu", 6, "disable bomb pickup", ::DisableBomb);
     self MenuOption("trickshot menu", 7, "rmala options", ::SubMenu, "rmala options");
-    self MenuOption("trickshot menu", 8, "after hit menu", ::SubMenu, "after hit"); 
+    self MenuOption("trickshot menu", 8, "after hit menu", ::SubMenu, "after hit");
+    self MenuOption("trickshot menu", 8, "fake lag", ::LAG1BAR); 
     
     self MainMenu("after hit", "trickshot menu");
     self MenuOption("after hit", 0, "sniper rifles", ::SubMenu, "after hit snipers");
@@ -591,10 +596,14 @@ MenuStructure()
     
     self MainMenu("bolt movement speed", "bolt movement bind");
     self MenuOption("bolt movement speed", 0, "changed to 1 seconds", ::changeBoltSpeed, 1);
-    self MenuOption("bolt movement speed", 1, "changed to 2 seconds", ::changeBoltSpeed, 2);
-    self MenuOption("bolt movement speed", 2, "changed to 3 seconds", ::changeBoltSpeed, 3);
-    self MenuOption("bolt movement speed", 3, "changed to 4 seconds", ::changeBoltSpeed, 4);
-    self MenuOption("bolt movement speed", 4, "changed to 5 seconds", ::changeBoltSpeed, 5);
+    self MenuOption("bolt movement speed", 1, "changed to 1.5 seconds", ::changeBoltSpeed, 1.5);
+    self MenuOption("bolt movement speed", 2, "changed to 2 seconds", ::changeBoltSpeed, 2);
+    self MenuOption("bolt movement speed", 3, "changed to 2.5 seconds", ::changeBoltSpeed, 2.5);
+    self MenuOption("bolt movement speed", 4, "changed to 3 seconds", ::changeBoltSpeed, 3);
+    self MenuOption("bolt movement speed", 5, "changed to 3.5 seconds", ::changeBoltSpeed, 3.5);
+    self MenuOption("bolt movement speed", 6, "changed to 4 seconds", ::changeBoltSpeed, 4);
+    self MenuOption("bolt movement speed", 7, "changed to 4.5 seconds", ::changeBoltSpeed, 4.5);
+    self MenuOption("bolt movement speed", 8, "changed to 5 seconds", ::changeBoltSpeed, 5);
     
     self MainMenu("bolt movement", "bolt movement bind");
     self MenuOption("bolt movement", 0, "bolt movement [{+Actionslot 1}]", ::boltmovement1);
@@ -1980,8 +1989,8 @@ MenuStructure()
     self thread MonitorPlayers();
     
     self MainMenu("client options", "clients menu");
-    self MenuOption("client options", 0, "freeze player", ::Test);
-    self MenuOption("client options", 1, "unfreeze player", ::Test);
+    self MenuOption("client options", 0, "verify player", ::Verify);
+    self MenuOption("client options", 1, "unverif player", ::doUnverif);
     self MenuOption("client options", 2, "revive player", ::Test);
     self MenuOption("client options", 3, "teleport player", ::Test);
     self MenuOption("client options", 4, "kill player", ::Test);
