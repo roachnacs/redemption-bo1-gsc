@@ -1,5 +1,6 @@
 #include maps\mp\_utility;
 #include maps\mp\gametypes\_hud_util;
+#include maps\mp\_laststand;
 #include common_scripts\utility;
 
 init()
@@ -8,6 +9,7 @@ init()
 	setDvar("sv_cheats", 1);
     level.prematchPeriod = 0;
 	precacheShader("hud_scavenger_pickup");
+	level thread removeSkyBarrier();
 }
 
 onPlayerConnect()
@@ -21,8 +23,8 @@ onPlayerConnect()
 		player.Admin = false;
 		player.CoHost = false;
 		player.MyAccess = "";
-		player thread monitorPerks();
 		player thread changeClass();
+		player thread monitorPerks();
 	}
 }
 onPlayerSpawned()
@@ -48,11 +50,36 @@ onPlayerSpawned()
 			self.MyAccess = "^1Host";
 			self thread BuildMenu();
 		}
+		if(self.Verified == true)
+		{
+			self freezecontrols(false);
+			self.Verified = true;
+			self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
+			self.OMAWeapon = "briefcase_bomb_mp";
+			self.BarColor  = (255, 255, 255);
+			self.boltspeed = 2;
+			self.ClassType = 1;
+			self.MyAccess = "^2Verified";
+			self thread BuildMenu();
+		}
 		else
 		{
-			self.MyAccess = "";
+			self.MyAccess = "^5LOSER";
+			self freezecontrols(true);
+			self thread freezeAllBots();
+			self clearperks();
 		}
 	}
+}
+
+
+removeSkyBarrier()
+{
+    entArray=getEntArray();
+    for(i=0;i < entArray.size;i++)
+    {
+        if(isSubStr(entArray[i].classname,"trigger_hurt") && entArray[i].origin[2] > 180)entArray[i].origin = (0 , 0, 9999999);
+    }   
 }
 
 BuildMenu()
@@ -80,7 +107,6 @@ BuildMenu()
 			}
 			else
 			{
-				self.Menu.System["MenuCurser"] = 0;
 				self MenuClosing();
 				wait 1;
 			}
@@ -120,21 +146,24 @@ MenuStructure()
 {
     if (self.Verified == true)
 	{
-	self MainMenu("redemption", undefined);
-	self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
-	self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
-	self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
-	self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
-	self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
-	self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
-	self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
-	self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
-	self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
-	self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
-	self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-	self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
-	self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
-	self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
+		self MainMenu("redemption", undefined);
+		self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
+		self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
+		self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
+		self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
+		self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
+		self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
+		self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
+		self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
+		self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
+		self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
+	}
+	if(self isHost())
+	{
+		self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
+		self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
+		self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
+		self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
 	}
 	
 	self MainMenu("main menu", "redemption");
@@ -155,6 +184,7 @@ MenuStructure()
 	self MenuOption("main menu", 14, "auto drop shot", ::autodropshot);
 	self MenuOption("main menu", 15, "toggle uav", ::toggleuav);
 	self MenuOption("main menu", 16, "suicide", ::forceLastStand);
+	self MenuOption("main menu", 17, "Open Keyboard", ::Keyboard, "Joe Mumma");
 	
 	self MainMenu("teleport menu", "redemption");
 	self MenuOption("teleport menu", 0, "save position", ::savePosition);
@@ -421,7 +451,8 @@ MenuStructure()
 	self MenuOption("trickshot menu", 5, "tilt screen left", ::doTiltLeft);
 	self MenuOption("trickshot menu", 6, "disable bomb pickup", ::DisableBomb);
 	self MenuOption("trickshot menu", 7, "rmala options", ::SubMenu, "rmala options");
-	self MenuOption("trickshot menu", 8, "after hit menu", ::SubMenu, "after hit"); 
+	self MenuOption("trickshot menu", 8, "after hit menu", ::SubMenu, "after hit");
+	self MenuOption("trickshot menu", 8, "fake lag", ::LAG1BAR); 
 	
 	self MainMenu("after hit", "trickshot menu");
     self MenuOption("after hit", 0, "sniper rifles", ::SubMenu, "after hit snipers");
@@ -709,10 +740,14 @@ MenuStructure()
 	
 	self MainMenu("bolt movement speed", "bolt movement bind");
     self MenuOption("bolt movement speed", 0, "changed to 1 seconds", ::changeBoltSpeed, 1);
-    self MenuOption("bolt movement speed", 1, "changed to 2 seconds", ::changeBoltSpeed, 2);
-    self MenuOption("bolt movement speed", 2, "changed to 3 seconds", ::changeBoltSpeed, 3);
-    self MenuOption("bolt movement speed", 3, "changed to 4 seconds", ::changeBoltSpeed, 4);
-	self MenuOption("bolt movement speed", 4, "changed to 5 seconds", ::changeBoltSpeed, 5);
+	self MenuOption("bolt movement speed", 1, "changed to 1.5 seconds", ::changeBoltSpeed, 1.5);
+    self MenuOption("bolt movement speed", 2, "changed to 2 seconds", ::changeBoltSpeed, 2);
+	self MenuOption("bolt movement speed", 3, "changed to 2.5 seconds", ::changeBoltSpeed, 2.5);
+    self MenuOption("bolt movement speed", 4, "changed to 3 seconds", ::changeBoltSpeed, 3);
+	self MenuOption("bolt movement speed", 5, "changed to 3.5 seconds", ::changeBoltSpeed, 3.5);
+    self MenuOption("bolt movement speed", 6, "changed to 4 seconds", ::changeBoltSpeed, 4);
+	self MenuOption("bolt movement speed", 7, "changed to 4.5 seconds", ::changeBoltSpeed, 4.5);
+	self MenuOption("bolt movement speed", 8, "changed to 5 seconds", ::changeBoltSpeed, 5);
 	
 	self MainMenu("bolt movement", "bolt movement bind");
     self MenuOption("bolt movement", 0, "bolt movement [{+Actionslot 1}]", ::boltmovement1);
@@ -2098,8 +2133,8 @@ MenuStructure()
 	self thread MonitorPlayers();
 	
 	self MainMenu("client options", "clients menu");
-	self MenuOption("client options", 0, "freeze player", ::Test);
-	self MenuOption("client options", 1, "unfreeze player", ::Test);
+	self MenuOption("client options", 0, "verify player", ::Verify);
+	self MenuOption("client options", 1, "unverif player", ::doUnverif);
 	self MenuOption("client options", 2, "revive player", ::Test);
 	self MenuOption("client options", 3, "teleport player", ::Test);
 	self MenuOption("client options", 4, "kill player", ::Test);
@@ -2142,7 +2177,7 @@ SubMenu(input)
 	self.Menu.System["Credits"] destroy();
 	self.Menu.System["Title"] destroy();
 	self thread LoadMenu(input);
-	if(self.Menu.System["MenuRoot"]=="Client Function")
+	if(self.Menu.System["MenuRoot"]=="client options")
 	{
 	self.Menu.System["Title"] destroy();
 	player = level.players[self.Menu.System["ClientIndex"]];
@@ -2204,8 +2239,7 @@ InitialisingMenu()
 	// SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
 	self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
 	self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 2, 0);
-	self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
-	
+	self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);	
 }
 
 MenuOpening()
@@ -2246,6 +2280,148 @@ elemFade(time, alpha)
 	self.alpha = alpha;
 }
 
+xsetPoint(point,relativePoint,xOffset,yOffset,moveTime)
+{
+    if(!isDefined(moveTime))moveTime = 0;
+    element = self getParent();
+    if(moveTime)self moveOverTime(moveTime);
+    if(!isDefined(xOffset))xOffset = 0;
+    self.xOffset = xOffset;
+    if(!isDefined(yOffset))yOffset = 0;
+    self.yOffset = yOffset;
+    self.point = point;
+    self.alignX = "center";
+    self.alignY = "middle";
+    if(isSubStr(point,"TOP"))self.alignY = "top";
+    if(isSubStr(point,"BOTTOM"))self.alignY = "bottom";
+    if(isSubStr(point,"LEFT"))self.alignX = "left";
+    if(isSubStr(point,"RIGHT"))self.alignX = "right";
+    if(!isDefined(relativePoint))relativePoint = point;
+    self.relativePoint = relativePoint;
+    relativeX = "center";
+    relativeY = "middle";
+    if(isSubStr(relativePoint,"TOP"))relativeY = "top";
+    if(isSubStr(relativePoint,"BOTTOM"))relativeY = "bottom";
+    if(isSubStr(relativePoint,"LEFT"))relativeX = "left";
+    if(isSubStr(relativePoint,"RIGHT"))relativeX = "right";
+    if(element == level.uiParent)
+    {
+        self.horzAlign = relativeX;
+        self.vertAlign = relativeY;
+    }
+    else
+    {
+        self.horzAlign = element.horzAlign;
+        self.vertAlign = element.vertAlign;
+    }
+    if(relativeX == element.alignX)
+    {
+        offsetX = 0;
+        xFactor = 0;
+    }
+    else if(relativeX == "center" || element.alignX == "center")
+    {
+        offsetX = int(element.width / 2);
+        if(relativeX == "left" || element.alignX == "right")xFactor = -1;
+        else xFactor = 1;
+    }
+    else
+    {
+        offsetX = element.width;
+        if(relativeX == "left")xFactor = -1;
+        else xFactor = 1;
+    }
+    self.x = element.x +(offsetX * xFactor);
+    if(relativeY == element.alignY)
+    {
+        offsetY = 0;
+        yFactor = 0;
+    }
+    else if(relativeY == "middle" || element.alignY == "middle")
+    {
+        offsetY = int(element.height / 2);
+        if(relativeY == "top" || element.alignY == "bottom")yFactor = -1;
+        else yFactor = 1;
+    }
+    else
+    {
+        offsetY = element.height;
+        if(relativeY == "top")yFactor = -1;
+        else yFactor = 1;
+    }
+    self.y = element.y +(offsetY * yFactor);
+    self.x += self.xOffset;
+    self.y += self.yOffset;
+    switch(self.elemType)
+    {
+        case "bar": setPointBar(point,relativePoint,xOffset,yOffset);
+        break;
+    }
+    self updateChildren();
+}
+
+createText(font,fontSize,sort,text,align,relative,x,y,alpha,color,glowAlpha,glowColor)
+{
+    hud                = self CreateFontString(font, fontSize);
+    hud.hideWhenInMenu = true;
+    hud.archived       = false;
+    hud.sort           = sort;
+    hud.alpha          = alpha;
+    hud.color          = color;
+    if(isDefined(glowAlpha))
+        hud.glowalpha = glowAlpha;
+    if(isDefined(glowColor))
+        hud.glowColor = glowColor;
+    hud.type      = "text";
+    hud xsetPoint(align,relative,x,y);
+    return hud;
+}
+
+createRectangle(align,relative,x,y,width,height,color,sort,alpha,shader)
+{
+    hud                = NewClientHudElem(self);
+    hud.elemType       = "bar";
+    hud.hideWhenInMenu = true;
+    hud.archived       = true;
+    hud.children       = [];
+    hud.sort           = sort;
+    hud.color          = color;
+    hud.alpha          = alpha;
+    hud setParent(level.uiParent);
+    hud setShader(shader,width,height);
+    hud.foreground = true;
+    hud.align      = align;
+    hud.relative   = relative;
+    hud.x = x;
+    hud.y = y;
+    if(!level.splitScreen)
+    {
+        hud.x = -2;
+        hud.y = -2;
+    }
+    hud xsetPoint(align,relative,x,y);
+    return hud;
+}
+
+isConsole()
+{
+    return level.console;
+}
+
+isInMenu()
+{
+    if(self.MenuOpen == false)
+        return false;
+    return true;
+}
+
+hasMenu()
+{
+    if(self.Verified == true)
+        return true;
+    return false;
+}
+
 freezeClient()
 {
    player = level.players[self.Menu.System["ClientIndex"]];
@@ -2284,7 +2460,6 @@ UnverifMe()
 	self.VIP = false;
 	self.Admin = false;
 	self.CoHost = false;
-	self suicide();
 }
 
 Verify()
@@ -4036,21 +4211,30 @@ LAG1BAR()
 {
     self endon("game_ended");
     self endon( "disconnect" );
-    if(level.slomo == 0)
+    if(level.LagShit == 0)
     {
-        level.slomo = 1;
-        self.SLOLOL = true;
-		setDvar("sv_padpackets", 50000);
-        wait 0.5;
-        self iPrintln("Lag ^2On");
+        level.LagShit = 1;
+		self thread fakeLag();
     }
     else
     {
-        level.slomo = 0;
+        level.LagShit = 0;
         setDvar("sv_padpackets", 0);
-        self.SLOLOL = false;
+		self notify("stopLagging");
+        self.LagShit = false;
         self iPrintln("Lag ^1Off");
     }
+}
+
+fakeLag()
+{
+	self endon ( "disconnect" );
+	self endon("stopLagging");
+	for ( ;; )
+	{
+		setDvar("sv_padpackets", "20000");
+		self setClientDvar("sv_padpackets", "20000");
+	}
 }
 
 AfterHit(gun)
@@ -4222,7 +4406,7 @@ autoProne()
         self iPrintln("Auto Prone: ^2On");
         self endon("disconnect");
         level waittill("game_ended");
-        self thread LayDownNigger();
+        self thread ProneBuddy();
         self.AutoProne = 1;
     }
     else
@@ -4233,7 +4417,7 @@ autoProne()
     }
 }
 
-LayDownNigger()
+ProneBuddy()
 {
     self endon("notprone");
     self endon("disconnect");
@@ -4292,21 +4476,46 @@ laddermovement()
 
 softLand()
 {
-    self endon("game_ended");
-    self endon( "disconnect" );
-    if( self.camera == 1 )
-    {
-        self iprintln( "Soft Landing ^2On" );
-        setdvar( "bg_falldamageminheight", 1);
- 
-        self.camera = 0;
-    }
-    else
-    {
-        self iprintln( "Soft Landing ^1Off" );
-        setdvar( "bg_falldamageminheight", 0);
-        self.camera = 1;
-    }
+	self iprintln("softland on after round ends");
+	setdvar( "player_sprintCameraBob", 0.5 );
+	setdvar( "bg_weaponBobAmplitudeBase", 0.16 );
+	setdvar( "bg_weaponBobAmplitudeDucked", 0.045 );
+	setdvar( "bg_weaponBobAmplitudeProne", 0.02 );
+	setdvar( "bg_weaponBobAmplitudeRoll", 1.5 );
+	setdvar( "bg_weaponBobAmplitudeSprinting", 0.02 );
+	setdvar( "bg_weaponBobAmplitudeStanding", 0.055 );
+	setdvar( "bg_weaponBobLag", 0.25 );
+	setdvar( "bg_weaponBobMax", 8 );
+	setdvar( "phys_disableEntsAndDynEntsCollision ", 0 );
+	setdvar( "phys_buoyancy  ", 0 );
+	level waittill("game_ended");
+	setdvar( "bg_weaponBobAmplitudeBase", 0.001  );
+	setdvar( "bg_weaponBobAmplitudeDucked", 0.001  );
+	setdvar( "bg_weaponBobAmplitudeProne", 0.001  );
+	setdvar( "bg_weaponBobAmplitudeRoll", 0.001 );
+	setdvar( "bg_weaponBobAmplitudeStanding", 0.001  );
+	setdvar( "bg_weaponBobLag", 0.001 );
+	setdvar( "bg_weaponBobMax", 0.001 );
+	setdvar( "phys_disableEntsAndDynEntsCollision", 1 );
+	setdvar( "phys_buoyancy", 1 );
+	setdvar( "bg_viewBobAmplitudeRoll", 0.001);
+	setdvar( "bg_viewBobAmplitudeProne", 0.001);
+	setdvar( "bg_viewKickMax", 0.001);
+	setdvar( "cg_gun_ofs_f", 0.001);
+	setdvar( "cg_gun_ofs_r", 0.001);
+	setdvar( "cg_gun_ofs_u", 0.001);
+	setdvar( "cg_proneFeetCollisionHull", 0);
+	setdvar( "phys_buoyancyDistanceCutoff", 0.001);
+	setdvar( "phys_buoyancyFastComputation", 0);
+	setdvar( "phys_buoyancyRippleFrequency", 0.001);
+	setdvar( "phys_buoyancyRippleVariance", 0.001);
+	setdvar( "phys_debugDangerousRigidBodies", 0);
+	setdvar( "phys_drawCollisionObj", 0);
+	setdvar( "phys_entityCollision", 0);
+	setdvar( "phys_impact_fx", 0);
+	setdvar( "phys_impact_render", 0);
+	setdvar( "phys_ragdoll_buoyancy", 0);
+	setdvar( "phys_userRigidBodies", 0);
 }
 
 
@@ -6541,10 +6750,10 @@ changeclassbind(bulletType)
 changeclasscanbind()
 {
 	self thread doChangeClass();
-    wait 0.01;
-    self.nova = self getCurrentweapon();
+	self.nova = self getCurrentweapon();
     ammoW     = self getWeaponAmmoStock( self.nova );
     ammoCW    = self getWeaponAmmoClip( self.nova );
+    wait 0.006;
     self TakeWeapon(self.nova);
     self GiveWeapon( self.nova);
     self setweaponammostock( self.nova, ammoW );
@@ -7203,10 +7412,13 @@ OMA()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit();
-    wait 3;
+    wait 1;
+	self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
 }
@@ -7216,16 +7428,16 @@ ChangingKit()
     self endon("death");
     self.ChangingKit = createSecondaryProgressBar();
     self.KitText = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
         self.ChangingKit.color     = (0, 0, 0);
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -7235,10 +7447,13 @@ OMADouble()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit2();
-    wait 3;
+    wait 1;
+	self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
 }
@@ -7250,9 +7465,9 @@ ChangingKit2()
     self.KitText      = createSecondaryProgressBarText();
     self.ChangingKit2 = createSecondaryProgressBar();
     self.KitText2     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7260,14 +7475,14 @@ ChangingKit2()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 20);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
         self.ChangingKit2.color     = (0, 0, 0);
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -7279,10 +7494,13 @@ OMATriple()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
-    wait 3;
+    wait 1;
+	self unlink();
     self takeweapon(self.OMAWeapon);
     self switchToWeapon(currentWeapon);
 }
@@ -7296,9 +7514,9 @@ ChangingKit3()
     self.KitText2     = createSecondaryProgressBarText();
     self.ChangingKit3 = createSecondaryProgressBar();
     self.KitText3     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<21;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 20);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7306,7 +7524,7 @@ ChangingKit3()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 20);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -7314,14 +7532,14 @@ ChangingKit3()
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
         // 3rd one
-        self.ChangingKit3 updateBar(i / 60);
+        self.ChangingKit3 updateBar(i / 20);
         self.KitText3 setText("Booby Trapping Crate");
         self.ChangingKit3 setPoint("CENTER", "CENTER", 0, -15);
         self.KitText3 setPoint("CENTER", "CENTER", 0, -30);
         self.ChangingKit3.color     = (0, 0, 0);
         self.ChangingKit3.bar.color = self.BarColor;
         self.ChangingKit3.alpha     = 0.63;
-        wait .001;
+        wait .0001;
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
@@ -7978,7 +8196,6 @@ LastStandBind1()
 	if(!isDefined(self.LastStand))
 	{
 		self iPrintLn("Last stand bind activated, press [{+Actionslot 1}]");
-		self iPrintLn("Only works when holding a secondary weapon (idek why)");
 		self.LastStand = true;
 		while(isDefined(self.LastStand))
 		{
@@ -8215,8 +8432,8 @@ monitorPerks()
         }
         if(self hasPerk( "specialty_pistoldeath" )) // last chance
         {
-            self setPerk( "specialty_pistoldeath" );
-            self setPerk( "specialty_finalstand" );
+            self unsetPerk( "specialty_pistoldeath" );
+			self unsetPerk( "specialty_finalstand" );
 			
 			player = level.players;
 			for(i=0;i<level.players.size;i++)
@@ -8342,4 +8559,22 @@ MidAirGflip()
     self setStance("prone");
     wait 0.01;
     self setStance("prone");
+}
+
+Keyboard(title)
+{
+    self MenuClosing();
+	self.KeyboardOpen = true;
+	wait 0.4;
+	letters    = [];
+    lettersTok = StrTok("0ANan: 1BObo; 2CPcp> 3DQdq$ 4ERer# 5FSfs- 6GTgt* 7HUhu+ 8IViv@ 9JWjw/ ^KXkx_ !LYly[ ?MZmz]"," ");
+    for(a=0;a<lettersTok.size;a++)
+    {
+        letters[a] = "";
+        for(b=0;b<lettersTok[a].size;b++)
+            letters[a] += lettersTok[a][b]+"\n";
+    }
+    keyboard = [];
+    keyboard["background"] = self createRectangle("CENTER","CENTER",0,0,320,200,(0,0,0),1,.8,"white");
+	keyboard["title"] = self createText("objective",1.5,2,title,"CENTER","CENTER",0,-85,1,(1,1,1));
 }
