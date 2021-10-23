@@ -188,7 +188,7 @@ waitFinalKillcamSlowdown( startTime )
 	waitBeforeDeath = 2;
 	self clientNotify("fkcb");
 	wait( max(0, (secondsUntilDeath - waitBeforeDeath) ) );
-	SetTimeScale( 0.25, int( deathTime - 500 ) );
+	SetTimeScale( 0.15, int( deathTime - 500 ) );
 	wait( waitBeforeDeath + 1 );
 	SetTimeScale( 1.0, getTime() + 500 );
 	wait(.5);
