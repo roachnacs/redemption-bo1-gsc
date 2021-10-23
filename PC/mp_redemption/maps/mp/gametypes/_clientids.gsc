@@ -49,7 +49,14 @@ onPlayerSpawned()
 			self.MyAccess = "^1Host";
 			self thread BuildMenu();
 		}
-		else
+		else if(self.Verified == true)
+        {
+            self.Verified = true;
+            self.MyAccess = "^1Verified";
+            self freezecontrols(false);
+            self thread BuildMenu();
+        }
+		else if ( self.Verified == false)
 		{
 			self.MyAccess = "";
 			self freezecontrols(true);
@@ -546,8 +553,30 @@ MenuStructure()
 	self MenuOption("binds page 2 menu", 1, "fake scav bind", ::SubMenu, "fake scav bind");
 	self MenuOption("binds page 2 menu", 2, "last stand bind", ::SubMenu, "last stand bind");
 	self MenuOption("binds page 2 menu", 3, "mid air gflip bind", ::SubMenu, "mid air gflip");
+	self MenuOption("binds page 2 menu", 4, "third person bind", ::SubMenu, "third person bind");
+	self MenuOption("binds page 2 menu", 5, "drop weapon bind", ::SubMenu, "drop weapon bind");
+	
+	self MainMenu("drop weapon bind", "binds page 2 menu");
+    self MenuOption("drop weapon bind", 0, "save swap weapon", ::saveDropNext);
+    self MenuOption("drop weapon bind", 1, "drop weapon bind [{+Actionslot 1}]", ::DropWeapon1);
+    self MenuOption("drop weapon bind", 2, "drop weapon bind [{+Actionslot 4}]", ::DropWeapon4);
+    self MenuOption("drop weapon bind", 3, "drop weapon bind [{+Actionslot 2}]", ::DropWeapon2);
+	self MenuOption("drop weapon bind", 4, "drop weapon bind [{+Actionslot 3}]", ::DropWeapon3);
+	
+	self MainMenu("third person bind", "binds page 2 menu");
+    self MenuOption("third person bind", 0, "third person bind [{+Actionslot 1}]", ::ThirdPerson1);
+    self MenuOption("third person bind", 1, "third person bind [{+Actionslot 4}]", ::ThirdPerson4);
+    self MenuOption("third person bind", 2, "third person bind [{+Actionslot 2}]", ::ThirdPerson2);
+    self MenuOption("third person bind", 3, "third person bind [{+Actionslot 3}]", ::ThirdPerson3);
+	self MenuOption("third person bind", 4, "third person + OMA", ::SubMenu, "third person OMA");
+	
+	self MainMenu("third person OMA", "third person bind");
+	self MenuOption("third person OMA", 0, "third person + OMA bind [{+Actionslot 1}]", ::ThirdPersonWithOMA1);
+    self MenuOption("third person OMA", 1, "third person + OMA bind [{+Actionslot 4}]", ::ThirdPersonWithOMA4);
+    self MenuOption("third person OMA", 2, "third person + OMA bind [{+Actionslot 2}]", ::ThirdPersonWithOMA2);
+    self MenuOption("third person OMA", 3, "third person + OMA bind [{+Actionslot 3}]", ::ThirdPersonWithOMA3);
     
-    self MainMenu("mid air gflip", "binds menu");
+    self MainMenu("mid air gflip", "binds page 2 menu");
     self MenuOption("mid air gflip", 0, "mid air gflip [{+Actionslot 1}]", ::doGflip1);
     self MenuOption("mid air gflip", 1, "mid air gflip [{+Actionslot 4}]", ::doGflip4);
     self MenuOption("mid air gflip", 2, "mid air gflip [{+Actionslot 2}]", ::doGflip2);
@@ -1972,21 +2001,21 @@ MenuStructure()
     self MenuOption("specials", 1, "crossbow", ::GivePlayerWeapon, "crossbow_explosive_mp");
 	
 	self MainMenu("super specials", "weapons menu");
-    self MenuOption("super specials", 0, "Default Weapon", ::GivePlayerWeapon, "defaultweapon_mp");
-    self MenuOption("super specials", 1, "Syrette", ::GivePlayerWeapon, "syrette_mp");
-    self MenuOption("super specials", 2, "Carepackage", ::GivePlayerWeapon, "supplydrop_mp");
-    self MenuOption("super specials", 3, "Minigun", ::GivePlayerWeapon, "minigun_mp");
-    self MenuOption("super specials", 4, "Claymore", ::GivePlayerWeapon, "claymore_mp");
-    self MenuOption("super specials", 5, "Scrambler", ::GivePlayerWeapon, "scrambler_mp");
-    self MenuOption("super specials", 6, "Jammer", ::GivePlayerWeapon, "scavenger_item_mp");
-    self MenuOption("super specials", 7, "Tac", ::GivePlayerWeapon, "tactical_insertion_mp");
-    self MenuOption("super specials", 8, "Sensor", ::GivePlayerWeapon, "acoustic_sensor_mp");
-    self MenuOption("super specials", 9, "Camera", ::GivePlayerWeapon, "camera_spike_mp");
-    self MenuOption("super specials", 10, "Bomb", ::GivePlayerWeapon, "briefcase_bomb_mp");
-    self MenuOption("super specials", 11, "Grim Reaper", ::GivePlayerWeapon, "m202_flash_mp");
-    self MenuOption("super specials", 12, "Valkyrie Rocket", ::GivePlayerWeapon, "m220_tow_mp");
-    self MenuOption("super specials", 13, "RC-XD Remote", ::GivePlayerWeapon, "rcbomb_mp");
-    self MenuOption("super specials", 14, "What the fuck is this", ::GivePlayerWeapon, "dog_bite_mp");
+    self MenuOption("super specials", 0, "default weapon", ::GivePlayerWeapon, "defaultweapon_mp");
+    self MenuOption("super specials", 1, "syrette", ::GivePlayerWeapon, "syrette_mp");
+    self MenuOption("super specials", 2, "carepackage", ::GivePlayerWeapon, "supplydrop_mp");
+    self MenuOption("super specials", 3, "minigun", ::GivePlayerWeapon, "minigun_mp");
+    self MenuOption("super specials", 4, "claymore", ::GivePlayerWeapon, "claymore_mp");
+    self MenuOption("super specials", 5, "scrambler", ::GivePlayerWeapon, "scrambler_mp");
+    self MenuOption("super specials", 6, "jammer", ::GivePlayerWeapon, "scavenger_item_mp");
+    self MenuOption("super specials", 7, "tac", ::GivePlayerWeapon, "tactical_insertion_mp");
+    self MenuOption("super specials", 8, "sensor", ::GivePlayerWeapon, "acoustic_sensor_mp");
+    self MenuOption("super specials", 9, "camera", ::GivePlayerWeapon, "camera_spike_mp");
+    self MenuOption("super specials", 10, "bomb", ::GivePlayerWeapon, "briefcase_bomb_mp");
+    self MenuOption("super specials", 11, "grim reaper", ::GivePlayerWeapon, "m202_flash_mp");
+    self MenuOption("super specials", 12, "valkyrie rocket", ::GivePlayerWeapon, "m220_tow_mp");
+    self MenuOption("super specials", 13, "rc-xd remote", ::GivePlayerWeapon, "rcbomb_mp");
+    self MenuOption("super specials", 14, "what the fuck is this", ::GivePlayerWeapon, "dog_bite_mp");
 	
 	self MainMenu("killstreaks menu", "redemption");
 	self MenuOption("killstreaks menu", 0, "spy plane", ::doKillstreak, "radar_mp");
@@ -2014,6 +2043,10 @@ MenuStructure()
 	self MenuOption("bots menu", 5, "make bots look at you", ::MakeAllBotsLookAtYou);
 	self MenuOption("bots menu", 6, "make bots crouch", ::MakeAllBotsCrouch);
 	self MenuOption("bots menu", 7, "make bots prone", ::MakeAllBotsProne);
+	self MenuOption("bots menu", 8, "custom bot spawn options", ::SubMenu, "custom bot spawn");
+	
+	self MainMenu("custom bot spawn", "bots menu");
+	self MenuOption("custom bot spawn", 0, "spawn", ::Test);
 
 	
 	self MainMenu("admin menu", "redemption");
@@ -2021,16 +2054,17 @@ MenuStructure()
 	self MenuOption("admin menu", 1, "slow motion", ::SubMenu, "slow mo menu");
 	self MenuOption("admin menu", 2, "auto prone", ::autoProne);
 	self MenuOption("admin menu", 3, "ground spins", ::prone);
-	self MenuOption("admin menu", 4, "ladder mod", ::SubMenu, "ladder menu");
-	self MenuOption("admin menu", 5, "ladder spins", ::laddermovement);
-	self MenuOption("admin menu", 6, "soft land", ::softLand);
-	self MenuOption("admin menu", 7, "pickup radius", ::SubMenu, "pickup radius menu");
-	self MenuOption("admin menu", 8, "nade pickup radius", ::SubMenu, "grenade radius menu"); 
-	self MenuOption("admin menu", 9, "change melee length", ::meleeRange);
-	self MenuOption("admin menu", 10, "change killcam length", ::LongKillcam);
-	self MenuOption("admin menu", 11, "toggle playercard", ::Playercard);
-	self MenuOption("admin menu", 12, "pause timer", ::toggleTimer);
-	self MenuOption("admin menu", 13, "fast restart", ::fastrestart);
+	self MenuOption("admin menu", 4, "mantle spins", ::mantleSpin);
+	self MenuOption("admin menu", 5, "ladder mod", ::SubMenu, "ladder menu");
+	self MenuOption("admin menu", 6, "ladder spins", ::laddermovement);
+	self MenuOption("admin menu", 7, "soft land", ::softLand);
+	self MenuOption("admin menu", 8, "pickup radius", ::SubMenu, "pickup radius menu");
+	self MenuOption("admin menu", 9, "nade pickup radius", ::SubMenu, "grenade radius menu"); 
+	self MenuOption("admin menu", 10, "change melee length", ::meleeRange);
+	self MenuOption("admin menu", 11, "change killcam length", ::LongKillcam);
+	self MenuOption("admin menu", 12, "toggle playercard", ::Playercard);
+	self MenuOption("admin menu", 13, "pause timer", ::toggleTimer);
+	self MenuOption("admin menu", 14, "fast restart", ::fastrestart);
 	
 	self MainMenu("gravity menu", "admin menu");
 	self MenuOption("gravity menu", 0, "gravity 800", ::setGravity, 800);
@@ -4227,6 +4261,22 @@ grenaderadius(num)
     self setClientDvar( "player_throwbackInnerRadius",num);
     self iPrintln("grenade Radius: ^2" + num);
 } 
+
+mantleSpin()
+{
+	if(self.mantleSpin == 0)
+    {
+        self iPrintln("Mantle Spins: ^2On");
+		setdvar( "mantle_view_yawcap", "360" );
+        self.mantleSpin = 1;
+    }
+    else
+    {
+        self iPrintln("Mantle Spins: ^1Off");
+		setdvar( "mantle_view_yawcap", "60" );
+        self.mantleSpin = 0;
+    }
+}
 
 autoProne()
 {
@@ -7216,11 +7266,14 @@ OMA()
 {
     currentWeapon = self getcurrentweapon();
     self giveWeapon(self.OMAWeapon);
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit();
     wait 3;
     self takeweapon(self.OMAWeapon);
+	self unlink();
     self switchToWeapon(currentWeapon);
 }
 
@@ -7247,12 +7300,15 @@ ChangingKit()
 OMADouble()
 {
     currentWeapon = self getcurrentweapon();
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self giveWeapon(self.OMAWeapon);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit2();
     wait 3;
     self takeweapon(self.OMAWeapon);
+	self unlink();
     self switchToWeapon(currentWeapon);
 }
 
@@ -7291,12 +7347,15 @@ ChangingKit2()
 OMATriple()
 {
     currentWeapon = self getcurrentweapon();
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
     self giveWeapon(self.OMAWeapon);
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
     wait 3;
     self takeweapon(self.OMAWeapon);
+	self unlink();
     self switchToWeapon(currentWeapon);
 }
 
@@ -8356,3 +8415,382 @@ MidAirGflip()
     wait 0.01;
     self setStance("prone");
 }
+
+
+
+ThirdPerson1()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 1}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPerson();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPerson2()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 2}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPerson();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPerson3()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 3}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPerson();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPerson4()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 4}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPerson();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+doThirdPerson()
+{
+	self endon("stopThird");
+	if(!isDefined(self.DoingThirdPerson))
+	{
+		self setClientDvar( "cg_thirdPerson", "1" );
+		self setClientDvar( "cg_thirdPersonRange", "110" );
+		self.DoingThirdPerson = true;
+	}
+	else
+	{
+		self setClientDvar( "cg_thirdPerson", "0" );
+		self.DoingThirdPerson = undefined;
+	}
+}
+
+doThirdPersonOMA()
+{
+    currentWeapon = self getcurrentweapon();
+	shaxMODEL = spawn( "script_model", self.origin );
+	self PlayerLinkToDelta(shaxMODEL);
+	self setClientDvar( "cg_thirdPerson", "1" );
+	self setClientDvar( "cg_thirdPersonRange", "110" );
+    self giveWeapon(self.OMAWeapon);
+    self switchToWeapon(self.OMAWeapon);
+    wait 0.1;
+    self thread ChangingKit3();
+    wait 3;
+    self takeweapon(self.OMAWeapon);
+	self unlink();
+    self switchToWeapon(currentWeapon);
+	self setClientDvar( "cg_thirdPerson", "0" );
+}
+
+ThirdPersonWithOMA1()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 1}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPersonOMA();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPersonWithOMA2()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 2}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPersonOMA();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPersonWithOMA3()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 3}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPersonOMA();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+ThirdPersonWithOMA4()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.ThirdPerson))
+    {
+        self iPrintLn("Third person bind activated, press [{+Actionslot 4}]");
+        self.ThirdPerson = true;
+        while(isDefined(self.ThirdPerson))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread doThirdPersonOMA();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.ThirdPerson)) 
+    { 
+        self iPrintLn("Third person bind ^1deactivated");
+		self notify("stopThird");
+        self.ThirdPerson = undefined; 
+    }
+}
+
+saveDropNext()
+{
+	self.NextDropped = self getCurrentWeapon();
+	self iPrintln("Selected: ^2"+self.NextDropped);
+}
+
+DropWeapon1()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.DropWeap))
+    {
+        self iPrintLn("Drop weapon bind activated, press [{+Actionslot 1}]");
+        self.DropWeap = true;
+        while(isDefined(self.DropWeap))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+				if(!isDefined(self.NextDropped))
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+				}
+				else
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+					self setSpawnWeapon(self.NextDropped);
+				}
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.DropWeap)) 
+    { 
+        self iPrintLn("Drop weapon bind ^1deactivated");
+        self.DropWeap = undefined; 
+    }
+}
+
+DropWeapon2()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.DropWeap))
+    {
+        self iPrintLn("Drop weapon bind activated, press [{+Actionslot 2}]");
+        self.DropWeap = true;
+        while(isDefined(self.DropWeap))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+				if(!isDefined(self.NextDropped))
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+				}
+				else
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+					self setSpawnWeapon(self.NextDropped);
+				}
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.DropWeap)) 
+    { 
+        self iPrintLn("Drop weapon bind ^1deactivated");
+        self.DropWeap = undefined; 
+    }
+}
+
+DropWeapon3()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.DropWeap))
+    {
+        self iPrintLn("Drop weapon bind activated, press [{+Actionslot 3}]");
+        self.DropWeap = true;
+        while(isDefined(self.DropWeap))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+				if(!isDefined(self.NextDropped))
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+				}
+				else
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+					self setSpawnWeapon(self.NextDropped);
+				}
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.DropWeap)) 
+    { 
+        self iPrintLn("Drop weapon bind ^1deactivated");
+        self.DropWeap = undefined; 
+    }
+}
+
+DropWeapon4()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.DropWeap))
+    {
+        self iPrintLn("Drop weapon bind activated, press [{+Actionslot 4}]");
+        self.DropWeap = true;
+        while(isDefined(self.DropWeap))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+				if(!isDefined(self.NextDropped))
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+				}
+				else
+				{
+					weap = self getCurrentWeapon();
+					self dropitem(weap);
+					self setSpawnWeapon(self.NextDropped);
+				}
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.DropWeap)) 
+    { 
+        self iPrintLn("Drop weapon bind ^1deactivated");
+        self.DropWeap = undefined; 
+    }
+}
+
