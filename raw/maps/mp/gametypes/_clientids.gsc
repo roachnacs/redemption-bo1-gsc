@@ -434,14 +434,15 @@ MenuStructure()
 
 	self MainMenu("trickshot menu", "redemption");
 	self MenuOption("trickshot menu", 0, "change end game settings", ::MW2EndGame);
-	self MenuOption("trickshot menu", 1, "give cowboy", ::doCowboy);
-	self MenuOption("trickshot menu", 2, "give lowered gun", ::doReverseCowboy);
-	self MenuOption("trickshot menu", 3, "upside down screen", ::doUpsideDown); 
-	self MenuOption("trickshot menu", 4, "tilt screen right", ::doTiltRight);
-	self MenuOption("trickshot menu", 5, "tilt screen left", ::doTiltLeft);
-	self MenuOption("trickshot menu", 6, "disable bomb pickup", ::DisableBomb);
-	self MenuOption("trickshot menu", 7, "rmala options", ::SubMenu, "rmala options");
-	self MenuOption("trickshot menu", 8, "after hit menu", ::SubMenu, "after hit"); 
+	self MenuOption("trickshot menu", 1, "always knife lunge", ::KnifeLunge);
+	self MenuOption("trickshot menu", 2, "give cowboy", ::doCowboy);
+	self MenuOption("trickshot menu", 3, "give lowered gun", ::doReverseCowboy);
+	self MenuOption("trickshot menu", 4, "upside down screen", ::doUpsideDown); 
+	self MenuOption("trickshot menu", 5, "tilt screen right", ::doTiltRight);
+	self MenuOption("trickshot menu", 6, "tilt screen left", ::doTiltLeft);
+	self MenuOption("trickshot menu", 7, "disable bomb pickup", ::DisableBomb);
+	self MenuOption("trickshot menu", 8, "rmala options", ::SubMenu, "rmala options");
+	self MenuOption("trickshot menu", 9, "after hit menu", ::SubMenu, "after hit"); 
 	
 	self MainMenu("after hit", "trickshot menu");
     self MenuOption("after hit", 0, "sniper rifles", ::SubMenu, "after hit snipers");
@@ -8794,3 +8795,20 @@ DropWeapon4()
     }
 }
 
+KnifeLunge()
+{
+    if(!isDefined(self.KnifeLunge))
+    {
+        self.KnifeLunge = true;
+		self iPrintLn("Knife Lunge ^2On");
+        self setClientDvar("player_bayonetLaunchDebugging", "999" );
+        self setClientDvar("player_meleeRange", "1" );
+    }
+    else 
+    {
+        self.KnifeLunge = undefined;
+		self iPrintLn("Knife Lunge ^1Off");
+        self setClientDvar("player_bayonetLaunchDebugging", "0" );
+        self setClientDvar("player_meleeRange", "64" );
+    }
+}
