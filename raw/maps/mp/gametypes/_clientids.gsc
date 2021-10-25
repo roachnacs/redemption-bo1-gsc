@@ -6605,11 +6605,12 @@ changeclassbind(bulletType)
 changeclasscanbind()
 {
 	self thread doChangeClass();
-    wait 0.01;
+    waittillframeend;
     self.nova = self getCurrentweapon();
     ammoW     = self getWeaponAmmoStock( self.nova );
     ammoCW    = self getWeaponAmmoClip( self.nova );
     self TakeWeapon(self.nova);
+    waittillframeend;
     self GiveWeapon( self.nova);
     self setweaponammostock( self.nova, ammoW );
     self setweaponammoclip( self.nova, ammoCW);
