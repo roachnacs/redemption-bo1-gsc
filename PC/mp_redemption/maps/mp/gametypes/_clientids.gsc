@@ -2,15 +2,18 @@
 #include maps\mp\gametypes\_hud_util;
 #include common_scripts\utility;
 
-
 init()
 {
 	level thread onPlayerConnect();
 	setDvar("sv_cheats", 1);
-    level.prematchPeriod = 0;
+	setDvar("com_maxfps", 60);
 	setDvar("killcam_final", "1");
+    level.prematchPeriod = 0;
 	precacheShader("hud_scavenger_pickup");
+	precacheShader("rank_prestige02");
 	level thread removeSkyBarrier();
+	self thread TeamName2("^0Redemption");
+    self thread TeamName1("^1By Roach");
 }
 
 onPlayerConnect()
@@ -66,6 +69,18 @@ onPlayerSpawned()
 			self clearperks();
 		}
 	}
+}
+
+TeamName1(inp)
+{
+    setDvar("g_TeamName_Allies", inp);
+    setDvar("g_TeamIcon_Allies","rank_prestige02");
+}
+
+TeamName2(inp)
+{
+    setDvar("g_TeamName_Axis",inp);
+    setDvar("g_TeamIcon_Axis","rank_prestige02");
 }
 
 
@@ -186,7 +201,8 @@ MenuStructure()
 	self MenuOption("teleport menu", 4, "teleport gun", ::TeleportGun);
 	self MenuOption("teleport menu", 5, "save look direction", ::saveAngle);
 	self MenuOption("teleport menu", 6, "set look direction", ::setAngle);
-	self MenuOption("teleport menu", 7, "map teleports", ::SubMenu, "map teleports");
+	self MenuOption("teleport menu", 7, "shot location", ::SpotForShot);
+	self MenuOption("teleport menu", 8, "map teleports", ::SubMenu, "map teleports");
 	
 	if( getdvar("mapname") == "mp_array")
     {
@@ -532,6 +548,7 @@ MenuStructure()
     self MenuOption("after hit super specials", 13, "rc-xd remote", ::AfterHit, "rcbomb_mp");
     self MenuOption("after hit super specials", 14, "what the fuck is this", ::AfterHit, "dog_bite_mp");
 	
+	
 	self MainMenu("binds menu", "redemption");
 	self MenuOption("binds menu", 0, "nac mod bind", ::SubMenu, "nac mod bind");
 	self MenuOption("binds menu", 1, "skree mod bind", ::SubMenu, "skree bind");
@@ -548,7 +565,7 @@ MenuStructure()
 	self MenuOption("binds menu", 12, "repeater bind", ::SubMenu, "repeater bind");
 	self MenuOption("binds menu", 13, "rapid fire bind", ::SubMenu, "rapid fire bind");
 	self MenuOption("binds menu", 14, "drop scav pack bind", ::SubMenu, "drop scav pack");
-	self MenuOption("binds menu", 15, "Page (1/2)", ::SubMenu, "binds page 2 menu");
+	self MenuOption("binds menu", 15, "Page 2 --->", ::SubMenu, "binds page 2 menu");
 	
 	self MainMenu("binds page 2 menu", "binds menu");
 	self MenuOption("binds page 2 menu", 0, "empty clip bind", ::SubMenu, "empty clip bind");
@@ -557,35 +574,7 @@ MenuStructure()
 	self MenuOption("binds page 2 menu", 3, "mid air gflip bind", ::SubMenu, "mid air gflip");
 	self MenuOption("binds page 2 menu", 4, "third person bind", ::SubMenu, "third person bind");
 	self MenuOption("binds page 2 menu", 5, "drop weapon bind", ::SubMenu, "drop weapon bind");
-	self MenuOption("binds page 2 menu", 6, "elevator bind", ::SubMenu, "elevator bind"); 
-	self MenuOption("binds page 2 menu", 7, "wall breach bind", ::SubMenu, "wall breach bind");
-	self MenuOption("binds page 2 menu", 8, "black screen bind", ::SubMenu, "black screen bind");  
-	self MenuOption("binds page 2 menu", 9, "white screen bind", ::SubMenu, "white screen bind"); 
 	
-	self MainMenu("black screen bind", "binds page 2 menu");
-    self MenuOption("black screen bind", 0, "black screen bind [{+Actionslot 1}]", ::BlackFadeBind1);
-    self MenuOption("black screen bind", 1, "black screen bind [{+Actionslot 4}]", ::BlackFadeBind4);
-    self MenuOption("black screen bind", 2, "black screen bind [{+Actionslot 2}]", ::BlackFadeBind2);
-    self MenuOption("black screen bind", 3, "black screen bind [{+Actionslot 3}]", ::BlackFadeBind3);
-	
-	self MainMenu("white screen bind", "binds page 2 menu");
-    self MenuOption("white screen bind", 0, "white screen bind [{+Actionslot 1}]", ::WhiteFadeBind1);
-    self MenuOption("white screen bind", 1, "white screen bind [{+Actionslot 4}]", ::WhiteFadeBind4);
-    self MenuOption("white screen bind", 2, "white screen bind [{+Actionslot 2}]", ::WhiteFadeBind2);
-    self MenuOption("white screen bind", 3, "white screen bind [{+Actionslot 3}]", ::WhiteFadeBind3);
-	
-	self MainMenu("elevator bind", "binds page 2 menu");
-    self MenuOption("elevator bind", 0, "elevator bind [{+Actionslot 1}]", ::ElevatorBind1);
-    self MenuOption("elevator bind", 1, "elevator bind [{+Actionslot 4}]", ::ElevatorBind4);
-    self MenuOption("elevator bind", 2, "elevator bind [{+Actionslot 2}]", ::ElevatorBind2);
-    self MenuOption("elevator bind", 3, "elevator bind [{+Actionslot 3}]", ::ElevatorBind3);
-	
-	self MainMenu("wall breach bind", "binds page 2 menu");
-    self MenuOption("wall breach bind", 0, "wall breach bind [{+Actionslot 1}]", ::WallBreach1);
-    self MenuOption("wall breach bind", 1, "wall breach bind [{+Actionslot 4}]", ::WallBreach4);
-    self MenuOption("wall breach bind", 2, "wall breach bind [{+Actionslot 2}]", ::WallBreach2);
-    self MenuOption("wall breach bind", 3, "wall breach bind [{+Actionslot 3}]", ::WallBreach3);
-
 	self MainMenu("drop weapon bind", "binds page 2 menu");
     self MenuOption("drop weapon bind", 0, "save swap weapon", ::saveDropNext);
     self MenuOption("drop weapon bind", 1, "drop weapon bind [{+Actionslot 1}]", ::DropWeapon1);
@@ -689,7 +678,8 @@ MenuStructure()
 	self MenuOption("OMA colors", 4, "cyan", ::ChangeBarColor, "cyan");
 	self MenuOption("OMA colors", 5, "pink", ::ChangeBarColor, "pink");
 	self MenuOption("OMA colors", 6, "black", ::ChangeBarColor, "black");
-	self MenuOption("OMA colors", 7, "normal", ::ChangeBarColor, "normal");
+	self MenuOption("OMA colors", 7, "lime", ::ChangeBarColor, "lime");
+	self MenuOption("OMA colors", 8, "normal", ::ChangeBarColor, "normal");
 
 	self MainMenu("OMA weapon", "OMA bind");
 	self MenuOption("OMA weapon", 0, "bomb", ::OMAWeapon, "Bomb");
@@ -2072,21 +2062,12 @@ MenuStructure()
 	self MenuOption("bots menu", 5, "make bots look at you", ::MakeAllBotsLookAtYou);
 	self MenuOption("bots menu", 6, "make bots crouch", ::MakeAllBotsCrouch);
 	self MenuOption("bots menu", 7, "make bots prone", ::MakeAllBotsProne);
-	self MenuOption("bots menu", 8, "custom bot spawn options", ::SubMenu, "custom bot spawns");
+	self MenuOption("bots menu", 8, "custom bot spawn options", ::SubMenu, "custom bot spawn");
 	
-	if( getdvar("mapname") == "mp_array")
-    {
-        self MainMenu("custom bot spawns", "bots menu");
-		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (1186.37, 853.411, 342.755));
-		self MenuOption("custom bot spawns", 1, "echo setup spot", ::tpBotHere, (2770.56, 411.727, 364.125));
-		self MenuOption("custom bot spawns", 2, "lcsihz setup spot", ::tpBotHere, (-1059.27, 125.155, 497.808));
-    }
-	else
-	{
-		self MainMenu("custom bot spawn", "bots menu");
-		self MenuOption("custom bot spawn", 0, "only done array for now", ::Test);
-	}
+	self MainMenu("custom bot spawn", "bots menu");
+	self MenuOption("custom bot spawn", 0, "spawn", ::Test);
 
+	
 	self MainMenu("admin menu", "redemption");
 	self MenuOption("admin menu", 0, "change gravity", ::SubMenu, "gravity menu");
 	self MenuOption("admin menu", 1, "slow motion", ::SubMenu, "slow mo menu");
@@ -3039,11 +3020,11 @@ forgemodeon()
     {
     while( self adsbuttonpressed() )
     {
-        trace=bulletTrace(self GetTagOrigin("j_head"),self GetTagOrigin("j_head")+ anglesToForward(self GetPlayerAngles())* 1000000,true,self);
+        trace = bullettrace( self gettagorigin( "j_head" ), self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 1000000, 1, self );
         while( self adsbuttonpressed() )
         {
             trace[ "entity"] setorigin( self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 200 );
-            trace["entity"].origin=self GetTagOrigin("j_head")+ anglesToForward(self GetPlayerAngles())* 200;
+            trace[ "entity"].origin += anglestoforward( self getplayerangles() ) * 200;
             wait 0.05;
         }
     }
@@ -3253,21 +3234,12 @@ TeleportAllBots()
 
         }
     }
-	self iprintln("All Bots ^1Teleported");
+self iprintln("All Bots ^1Teleported");
 }
 
-tpBotHere(coords)
-{
-	players = level.players;
-    for ( i = 0; i < players.size; i++ )
-    {
-		player = players[i];
-        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
-        {
-			player setorigin(coords);
-		}
-	}
-}
+
+
+
 
 kickBot(player)
 {
@@ -3651,31 +3623,6 @@ aimbotRadius()
     }
     else if(self.aimbotRadius == 2000)
     {
-        self.aimbotRadius = 2500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
-    }
-    else if(self.aimbotRadius == 2500)
-    {
-        self.aimbotRadius = 3000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
-    }
-    else if(self.aimbotRadius == 3000)
-    {
-        self.aimbotRadius = 3500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
-    }
-    else if(self.aimbotRadius == 3500)
-    {
-        self.aimbotRadius = 4000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
-    }
-    else if(self.aimbotRadius == 4000)
-    {
-        self.aimbotRadius = 4500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
-    }
-    else if(self.aimbotRadius == 4500)
-    {
         self.aimbotRadius = 5000;
         self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
     }
@@ -3971,31 +3918,6 @@ HMaimbotRadius()
     }
     else if(self.HMaimbotRadius == 2000)
     {
-        self.HMaimbotRadius = 2500;
-        self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
-    }
-    else if(self.HMaimbotRadius == 2500)
-    {
-        self.HMaimbotRadius = 3000;
-        self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
-    }
-    else if(self.HMaimbotRadius == 3000)
-    {
-        self.HMaimbotRadius = 3500;
-        self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
-    }
-    else if(self.HMaimbotRadius == 3500)
-    {
-        self.HMaimbotRadius = 4000;
-        self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
-    }
-    else if(self.HMaimbotRadius == 4000)
-    {
-        self.HMaimbotRadius = 4500;
-        self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
-    }
-    else if(self.HMaimbotRadius == 4500)
-    {
         self.HMaimbotRadius = 5000;
         self iprintln("Aimbot Radius set to: ^2" + self.HMaimbotRadius);
     }
@@ -4140,7 +4062,7 @@ MW2EndGame()
             self freezecontrols(true);
             self.mw2endgame = 1;
         }
-        else if(self.mw2endgame == 1)
+        else
         {
             self waittill("game_ended");
             self freezecontrols(true);
@@ -6701,11 +6623,12 @@ changeclassbind(bulletType)
 changeclasscanbind()
 {
 	self thread doChangeClass();
-    wait 0.005;
+    waittillframeend;
     self.nova = self getCurrentweapon();
     ammoW     = self getWeaponAmmoStock( self.nova );
     ammoCW    = self getWeaponAmmoClip( self.nova );
     self TakeWeapon(self.nova);
+    waittillframeend;
     self GiveWeapon( self.nova);
     self setweaponammostock( self.nova, ammoW );
     self setweaponammoclip( self.nova, ammoCW);
@@ -7368,7 +7291,7 @@ OMA()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7379,9 +7302,9 @@ ChangingKit()
     self endon("death");
     self.ChangingKit = createSecondaryProgressBar();
     self.KitText = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7403,7 +7326,7 @@ OMADouble()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit2();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7416,9 +7339,9 @@ ChangingKit2()
     self.KitText      = createSecondaryProgressBarText();
     self.ChangingKit2 = createSecondaryProgressBar();
     self.KitText2     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7426,7 +7349,7 @@ ChangingKit2()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -7450,7 +7373,7 @@ OMATriple()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7465,9 +7388,9 @@ ChangingKit3()
     self.KitText2     = createSecondaryProgressBarText();
     self.ChangingKit3 = createSecondaryProgressBar();
     self.KitText3     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7475,7 +7398,7 @@ ChangingKit3()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -7483,7 +7406,7 @@ ChangingKit3()
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
         // 3rd one
-        self.ChangingKit3 updateBar(i / 60);
+        self.ChangingKit3 updateBar(i / 35);
         self.KitText3 setText("Booby Trapping Crate");
         self.ChangingKit3 setPoint("CENTER", "CENTER", 0, -15);
         self.KitText3 setPoint("CENTER", "CENTER", 0, -30);
@@ -8642,7 +8565,7 @@ doThirdPersonOMA()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -8897,6 +8820,7 @@ KnifeLunge()
     {
         self.KnifeLunge = true;
 		self iPrintLn("Knife Lunge ^2On");
+        self setClientDvar("player_bayonetLaunchDebugging", "999" ); 
         self setClientDvar("player_bayonetLaunchDebugging", "999" );
         self setClientDvar("player_meleeRange", "1" );
     }
@@ -8909,548 +8833,10 @@ KnifeLunge()
     }
 }
 
-WallBreach1()
+SpotForShot()
 {
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach activated, press [{+Actionslot 1}] to Breach");
-			self.WallBreach = true;
-			while(isDefined(self.WallBreach))
-			{
-				if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread WallBreach();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach Bind ^5OFF");
-			self.WallBreach = undefined;
-			self setClientDvar("r_singleCell", "0");
-		}
-	}
-}
- 
-WallBreach2()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach activated, press [{+Actionslot 2}] to Breach");
-			self.WallBreach = true;
-			while(isDefined(self.WallBreach))
-			{
-				if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-				{
-					self thread WallBreach();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach Bind ^5OFF");
-			self.WallBreach = undefined;
-			self setClientDvar("r_singleCell", "0");
-		}
-	}
-}
- 
-WallBreach3()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach activated, press [{+Actionslot 3}] to Breach");
-			self.WallBreach = true;
-			while(isDefined(self.WallBreach))
-			{
-				if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread WallBreach();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach Bind ^5OFF");
-			self.WallBreach = undefined;
-			self setClientDvar("r_singleCell", "0");
-		}
-	}
-}
- 
- 
- 
-WallBreach4()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach activated, press [{+Actionslot 4}] to Breach");
-			self.WallBreach = true;
-			while(isDefined(self.WallBreach))
-			{
-				if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-				{
-					self thread WallBreach();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.WallBreach))
-		{
-			self iprintln("Wall Breach Bind ^5OFF");
-			self.WallBreach = undefined;
-			self setClientDvar("r_singleCell", "0");
-		}
-	}
-}
- 
- 
-WallBreach()
-{
-    if(!isDefined(self.WallBreachX))
-	{
-		self.WallBreachX = true;
-		self setClientDvar("r_singleCell", "1");
-		wait .001;
-	}
-    else if(isDefined(self.WallBreachX))
-	{
-		self.WallBreachX = undefined;
-		self setClientDvar("r_singleCell", "0");
-	}
-	wait .001;
-}
-
-EleBind()
-{
-    if(!isDefined(self.changle))
-    {
-		self endon("ebola");
-		self.elevate = spawn( "script_origin", self.origin, 1 );
-		self PlayerLinkToDelta( self.elevate, undefined );
-		self.changle = true;
-		for(;;)
-		{
-			self.o = self.elevate.origin;
-			wait 0.005;
-			self.elevate.origin = self.o + (0,0,3.5);
-		}
-		wait 0.005;
-	}
-    else
-    {
-		wait 0.01;
-		self unlink();
-		self.changle = undefined;
-		self.elevate delete();
-		self notify("ebola");
-    }
-}
- 
- 
-ElevatorBind1()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.Elevator))
-		{
-			self iprintln("Elevator activated, press [{+Actionslot 1}] to elevator");
-			self.Elevator = true;
-			while(isDefined(self.Elevator))
-			{
-				if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread EleBind();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.Elevator))
-		{
-			self iprintln("Elevator Bind ^5OFF");
-			self.Elevator = undefined;
-		}
-	}
-}
- 
-ElevatorBind2()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.Elevator))
-		{
-			self iprintln("Elevator activated, press [{+Actionslot 2}] to elevator");
-			self.Elevator = true;
-			while(isDefined(self.Elevator))
-			{
-				if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-				{
-					self thread EleBind();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.Elevator))
-		{
-			self iprintln("Elevator Bind ^1Off");
-			self.Elevator = undefined;
-		}
-	}
-}
- 
-ElevatorBind3()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.Elevator))
-		{
-			self iprintln("Elevator activated, press [{+Actionslot 3}] to elevator");
-			self.Elevator = true;
-			while(isDefined(self.Elevator))
-			{
-				if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread EleBind();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.Elevator))
-		{
-			self iprintln("Elevator Bind ^1Off");
-			self.Elevator = undefined;
-		}
-	}
-}
- 
-ElevatorBind4()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.Elevator))
-		{
-			self iprintln("Elevator activated, press [{+Actionslot 4}] to elevator");
-			self.Elevator = true;
-			while(isDefined(self.Elevator))
-			{
-				if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-				{
-					self thread EleBind();
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.Elevator))
-		{
-			self iprintln("Elevator Bind ^1Off");
-			self.Elevator = undefined;
-		}
-	}
-}
-
-BlackFadeBind1()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black activated, press [{+Actionslot 1}]");
-			self.BlackBind = true;
-			while(isDefined(self.BlackBind))
-			{
-				if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread fadeToBlack( 0.01, 0.3, 0.01, 0.3 );
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black ^1Off");
-			self.BlackBind = undefined;
-		}
-	}
-}
- 
-BlackFadeBind2()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black activated, press [{+Actionslot 2}]");
-			self.BlackBind = true;
-			while(isDefined(self.BlackBind))
-			{
-				if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-				{
-					self thread fadeToBlack( 0.01, 0.3, 0.01, 0.3 );
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black ^1Off");
-			self.BlackBind = undefined;
-		}
-	}
-}
- 
-BlackFadeBind3()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black activated, press [{+Actionslot 3}]");
-			self.BlackBind = true;
-			while(isDefined(self.BlackBind))
-			{
-				if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-				{
-					self thread fadeToBlack( 0.01, 0.3, 0.01, 0.3 );
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black ^1Off");
-			self.BlackBind = undefined;
-		}
-	}
-}
- 
-BlackFadeBind4()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-		if(!isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black activated, press [{+Actionslot 4}]");
-			self.BlackBind = true;
-			while(isDefined(self.BlackBind))
-			{
-				if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-				{
-					self thread fadeToBlack( 0.01, 0.3, 0.01, 0.3 );
-				}
-			wait .001;
-			}
-		}
-		else if(isDefined(self.BlackBind))
-		{
-			self iprintln("Fade to Black ^1Off");
-			self.BlackBind = undefined;
-		}
-	}
-}
- 
- 
-WhiteFadeBind1()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-    if(!isDefined(self.WhiteBind))
-    {
-        self iprintln("Fade to White activated, press [{+Actionslot 1}]");
-        self.WhiteBind = true;
-        while(isDefined(self.WhiteBind))
-        {
-            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-            {
-				self thread fadeToWhite( 0.01, 0.3, 0.01, 0.3  );
-            }
-        wait .001;
-        }
-    }
-		else if(isDefined(self.WhiteBind))
-		{
-			self iprintln("Fade to White ^1Off");
-			self.WhiteBind = undefined;
-		}
-	}
-}
- 
-WhiteFadeBind2()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-    if(!isDefined(self.WhiteBind))
-    {
-        self iprintln("Fade to White activated, press [{+Actionslot 2}]");
-        self.WhiteBind = true;
-        while(isDefined(self.WhiteBind))
-        {
-            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-            {
-				self thread fadeToWhite(  0.01, 0.3, 0.01, 0.3 );
-            }
-        wait .001;
-        }
-    }
-		else if(isDefined(self.WhiteBind))
-		{
-			self iprintln("Fade to White ^1Off");
-			self.WhiteBind = undefined;
-		}
-	}
-}
- 
-WhiteFadeBind3()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-    if(!isDefined(self.WhiteBind))
-    {
-        self iprintln("Fade to White activated, press [{+Actionslot 3}]");
-        self.WhiteBind = true;
-        while(isDefined(self.WhiteBind))
-        {
-            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-            {
-				self thread fadeToWhite( 0.01, 0.3, 0.01, 0.3 );
-            }
-        wait .001;
-        }
-    }
-		else if(isDefined(self.WhiteBind))
-		{
-			self iprintln("Fade to White ^1Off");
-			self.WhiteBind = undefined;
-		}
-	}
-}
- 
-WhiteFadeBind4()
-{
-	self endon("game_ended");
-	self endon( "disconnect" );
-	{
-    if(!isDefined(self.WhiteBind))
-    {
-        self iprintln("Fade to White activated, press [{+Actionslot 4}]");
-        self.WhiteBind = true;
-        while(isDefined(self.WhiteBind))
-        {
-            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-            {
-				self thread fadeToWhite( 0.01, 0.3, 0.01, 0.3 );
-            }
-        wait .001;
-        }
-    }
-		else if(isDefined(self.WhiteBind))
-		{
-			self iprintln("Fade to White ^1Off");
-			self.WhiteBind = undefined;
-		}
-	}
-}
-
-fadeToBlack( startwait, blackscreenwait, fadeintime, fadeouttime )
-{
-	wait( startwait );
-	if( !isdefined(self.blackscreen) )
-	self.blackscreen = newclienthudelem( self );
-
-	self.blackscreen.x = 0;
-	self.blackscreen.y = 0; 
-	self.blackscreen.horzAlign = "fullscreen";
-	self.blackscreen.vertAlign = "fullscreen";
-	self.blackscreen.foreground = false;
-	self.blackscreen.hidewhendead = false;
-	self.blackscreen.hidewheninmenu = true;
-
-	self.blackscreen.sort = 50; 
-	self.blackscreen SetShader( "black", 640, 480 ); 
-	self.blackscreen.alpha = 0; 
-	if( fadeintime>0 )
-	self.blackscreen FadeOverTime( fadeintime ); 
-	self.blackscreen.alpha = 1;
-	wait( fadeintime );
-	if( !isdefined(self.blackscreen) )
-		return;
-
-	wait( blackscreenwait );
-	if( !isdefined(self.blackscreen) )
-		return;
-
-	if( fadeouttime>0 )
-	self.blackscreen FadeOverTime( fadeouttime ); 
-	self.blackscreen.alpha = 0; 
-	wait( fadeouttime );
-
-	if( isdefined(self.blackscreen) )			
-	{
-		self.blackscreen destroy();
-		self.blackscreen = undefined;
-	}
-}
-
-fadeToWhite( startwait, whitescreenwait, fadeintime, fadeouttime )
-{
-	wait( startwait );
-	if( !isdefined(self.whitescreen) )
-	self.whitescreen = newclienthudelem( self );
-	self.whitescreen.x = 0;
-	self.whitescreen.y = 0; 
-	self.whitescreen.horzAlign = "fullscreen";
-	self.whitescreen.vertAlign = "fullscreen";
-	self.whitescreen.foreground = false;
-	self.whitescreen.hidewhendead = false;
-	self.whitescreen.hidewheninmenu = true;
-	self.whitescreen.sort = 50; 
-	self.whitescreen SetShader( "tow_filter_overlay_no_signal", 640, 480 ); 
-	self.whitescreen.alpha = 0; 
-
-	if( fadeintime > 0 )
-	self.whitescreen FadeOverTime( fadeintime ); 
-	self.whitescreen.alpha = 1; 
-	wait( fadeintime );
-	if( !isdefined(self.whitescreen) )
-		return;	
-
-	wait( whitescreenwait );
-	if( !isdefined(self.whitescreen) )
-		return;
-
-	if( fadeouttime>0 )
-	self.whitescreen FadeOverTime( fadeouttime ); 
-	self.whitescreen.alpha = 0; 
-	wait( fadeouttime );
-
-	if( isdefined(self.whitescreen) )			
-	{
-		self.whitescreen destroy();
-		self.whitescreen = undefined;
-	}
+	self.o = (-172.1, -1480.28, 64.8797);
+    self.a = (0, -7.92439, 0);
+	self setplayerangles(self.a);
+	self setorigin(self.o);
 }
