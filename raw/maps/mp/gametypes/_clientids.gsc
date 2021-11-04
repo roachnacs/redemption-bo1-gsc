@@ -7487,7 +7487,7 @@ OMA()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7498,9 +7498,9 @@ ChangingKit()
     self endon("death");
     self.ChangingKit = createSecondaryProgressBar();
     self.KitText = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7522,7 +7522,7 @@ OMADouble()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit2();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7535,9 +7535,9 @@ ChangingKit2()
     self.KitText      = createSecondaryProgressBarText();
     self.ChangingKit2 = createSecondaryProgressBar();
     self.KitText2     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7545,7 +7545,7 @@ ChangingKit2()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -7569,7 +7569,7 @@ OMATriple()
     self switchToWeapon(self.OMAWeapon);
     wait 0.1;
     self thread ChangingKit3();
-    wait 3;
+    wait 1.92;
     self takeweapon(self.OMAWeapon);
 	self unlink();
     self switchToWeapon(currentWeapon);
@@ -7584,9 +7584,9 @@ ChangingKit3()
     self.KitText2     = createSecondaryProgressBarText();
     self.ChangingKit3 = createSecondaryProgressBar();
     self.KitText3     = createSecondaryProgressBarText();
-    for(i=0;i<61;i++)
+    for(i=0;i<36;i++)
     {
-        self.ChangingKit updateBar(i / 60);
+        self.ChangingKit updateBar(i / 35);
         self.KitText setText("Capturing Crate");
         self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
@@ -7594,7 +7594,7 @@ ChangingKit3()
         self.ChangingKit.bar.color = self.BarColor;
         self.ChangingKit.alpha     = 0.63;
         // 2nd one
-        self.ChangingKit2 updateBar(i / 60);
+        self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
         self.ChangingKit2 setPoint("CENTER", "CENTER", 0, -50);
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
@@ -7602,7 +7602,7 @@ ChangingKit3()
         self.ChangingKit2.bar.color = self.BarColor;
         self.ChangingKit2.alpha     = 0.63;
         // 3rd one
-        self.ChangingKit3 updateBar(i / 60);
+        self.ChangingKit3 updateBar(i / 35);
         self.KitText3 setText("Booby Trapping Crate");
         self.ChangingKit3 setPoint("CENTER", "CENTER", 0, -15);
         self.KitText3 setPoint("CENTER", "CENTER", 0, -30);
