@@ -21,3 +21,14 @@ Recent Update Changes
 7. Added Wall Breach Bind
 8. Added Knife Lunges for console
 9. Bug fixes 🙂
+
+5th of November 2021
+////////////////////
+
+1. Added Canzoom Bind
+2. Added Disco Camo Bind
+3. Added Drop Carepackage Bind
+4. Added Illusion Reload Bind
+5. Faster OMA Bind
+6. Added More Custom Bot Teleports (still not done)
+7. Bug Fixes
