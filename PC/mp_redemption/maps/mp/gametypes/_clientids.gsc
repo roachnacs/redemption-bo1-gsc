@@ -13,7 +13,7 @@ init()
 	precacheShader("hud_scavenger_pickup");
 	level thread removeSkyBarrier();
 	self thread TeamName2("^0Redemption");
-    	self thread TeamName1("^1By Roach");
+	self thread TeamName1("^1By Roach");
 }
 
 onPlayerConnect()
@@ -130,7 +130,7 @@ BuildMenu()
 				self.Menu.System["MenuCurser"] = self.Menu.System["MenuTexte"][self.Menu.System["MenuRoot"]].size - 1;
 			}
 			self.Menu.Material["Scrollbar"] elemMoveY(.2, 35 + (self.Menu.System["MenuCurser"] * 15.6));
-			wait.2;
+			wait .15;
 		}
 		else if (self actionslottwobuttonpressed() && self.MenuOpen == true)
 		{
@@ -140,7 +140,7 @@ BuildMenu()
 				self.Menu.System["MenuCurser"] = 0;
 			}
 			self.Menu.Material["Scrollbar"] elemMoveY(.2, 35 + (self.Menu.System["MenuCurser"] * 15.6));
-			wait.2;
+			wait .15;
 		}
 		else if(self usebuttonpressed() && self.MenuOpen == true)
 		{
@@ -149,7 +149,7 @@ BuildMenu()
 				self thread [[self.Menu.System["MenuFunction"][self.Menu.System["MenuRoot"]][self.Menu.System["MenuCurser"]]]](self.Menu.System["MenuInput"][self.Menu.System["MenuRoot"]][self.Menu.System["MenuCurser"]]);
 				wait 0.2;
 		}
-		wait 0.05;
+		wait 0.005;
 	}
 }	
 
@@ -575,7 +575,36 @@ MenuStructure()
 	self MenuOption("binds page 2 menu", 6, "elevator bind", ::SubMenu, "elevator bind"); 
 	self MenuOption("binds page 2 menu", 7, "wall breach bind", ::SubMenu, "wall breach bind");
 	self MenuOption("binds page 2 menu", 8, "black screen bind", ::SubMenu, "black screen bind");  
-	self MenuOption("binds page 2 menu", 9, "white screen bind", ::SubMenu, "white screen bind"); 
+	self MenuOption("binds page 2 menu", 9, "white screen bind", ::SubMenu, "white screen bind");
+	self MenuOption("binds page 2 menu", 10, "canzoom bind", ::SubMenu, "canzoom bind");  
+	self MenuOption("binds page 2 menu", 11, "disco camo bind", ::SubMenu, "disco camo bind");
+	self MenuOption("binds page 2 menu", 12, "drop carepackage bind", ::SubMenu, "drop carepackage");
+	self MenuOption("binds page 2 menu", 13, "illusion reload bind", ::SubMenu, "illusion reload");
+
+	self MainMenu("illusion reload", "binds page 2 menu");
+    self MenuOption("illusion reload", 0, "illusion reload [{+Actionslot 1}]", ::IllusionReload1);
+    self MenuOption("illusion reload", 1, "illusion reload [{+Actionslot 4}]", ::IllusionReload4);
+    self MenuOption("illusion reload", 2, "illusion reload [{+Actionslot 2}]", ::IllusionReload2);
+    self MenuOption("illusion reload", 3, "illusion reload [{+Actionslot 3}]", ::IllusionReload3);	
+	
+	self MainMenu("drop carepackage", "binds page 2 menu");
+	self MenuOption("drop carepackage", 0, "save carepackage drop zone", ::saveCPdrop);
+    self MenuOption("drop carepackage", 1, "drop carepackage [{+Actionslot 1}]", ::DropDaCP1);
+    self MenuOption("drop carepackage", 2, "drop carepackage [{+Actionslot 4}]", ::DropDaCP4);
+    self MenuOption("drop carepackage", 3, "drop carepackage [{+Actionslot 2}]", ::DropDaCP2);
+    self MenuOption("drop carepackage", 4, "drop carepackage [{+Actionslot 3}]", ::DropDaCP3);
+	
+	self MainMenu("disco camo bind", "binds page 2 menu");
+    self MenuOption("disco camo bind", 0, "disco camo bind [{+Actionslot 1}]", ::DiscoCamo1);
+    self MenuOption("disco camo bind", 1, "disco camo bind [{+Actionslot 4}]", ::DiscoCamo4);
+    self MenuOption("disco camo bind", 2, "disco camo bind [{+Actionslot 2}]", ::DiscoCamo2);
+    self MenuOption("disco camo bind", 3, "disco camo bind [{+Actionslot 3}]", ::DiscoCamo3);
+	
+	self MainMenu("canzoom bind", "binds page 2 menu");
+    self MenuOption("canzoom bind", 0, "canzoom bind [{+Actionslot 1}]", ::Canzoom1);
+    self MenuOption("canzoom bind", 1, "canzoom bind [{+Actionslot 4}]", ::Canzoom4);
+    self MenuOption("canzoom bind", 2, "canzoom bind [{+Actionslot 2}]", ::Canzoom2);
+    self MenuOption("canzoom bind", 3, "canzoom bind [{+Actionslot 3}]", ::Canzoom3);
 	
 	self MainMenu("black screen bind", "binds page 2 menu");
     self MenuOption("black screen bind", 0, "black screen bind [{+Actionslot 1}]", ::BlackFadeBind1);
@@ -2096,10 +2125,84 @@ MenuStructure()
 		self MenuOption("custom bot spawns", 1, "echo setup spot", ::tpBotHere, (2770.56, 411.727, 364.125));
 		self MenuOption("custom bot spawns", 2, "lcsihz setup spot", ::tpBotHere, (-1059.27, 125.155, 497.808));
     }
+	else if( getdvar("mapname") == "mp_cracked")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (-538.514, -146.074, -139.678));
+		self MenuOption("custom bot spawns", 1, "roach lunge setup spot", ::tpBotHere, (692.768, -1309.57, -120.572));
+    }
+	else if( getdvar("mapname") == "mp_crisis")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (-1560.2, 935.719, 194.047));
+		self MenuOption("custom bot spawns", 1, "random setup spot", ::tpBotHere, (-549.218, 2656.4, 118.206));
+    }
+	else if( getdvar("mapname") == "mp_firingrange")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (50.9996, 1858.63, -47.5919));
+		self MenuOption("custom bot spawns", 1, "main stairs setup spot", ::tpBotHere, (945.049, 1580.52, 8.74408));
+		self MenuOption("custom bot spawns", 2, "b sandbags setup spot", ::tpBotHere, (-69.7541, 339.593, -28.875));
+		self MenuOption("custom bot spawns", 3, "stairs setup spot", ::tpBotHere, (-106.567, 1474.81, 30.125));
+		self MenuOption("custom bot spawns", 4, "knife lunge setup spot", ::tpBotHere, (-1335.97, 805.414, -57.875));
+    }
+	else if( getdvar("mapname") == "mp_duga")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "roach lunge setup spot", ::tpBotHere, (-772.487, -4373.51, 0.123261));
+    }
+	else if( getdvar("mapname") == "mp_cairo")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "bounce setup spot", ::tpBotHere, (-619.145, -141.839, 6.96646));
+		self MenuOption("custom bot spawns", 1, "mid map setup spot", ::tpBotHere, (-91.7517, -171.16, 46.7741));
+		self MenuOption("custom bot spawns", 2, "geen double lunge spot", ::tpBotHere, (343.868, 295.851, 60.4786));
+    }
+	else if( getdvar("mapname") == "mp_havoc")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (462.427, -1234.03, 296.125));
+		self MenuOption("custom bot spawns", 1, "under bridge spot", ::tpBotHere, (1846.34, 129.858, 82.4645));
+		self MenuOption("custom bot spawns", 2, " roach lunge spot", ::tpBotHere, (2695, -463.16, 284.125));
+		self MenuOption("custom bot spawns", 3, " spawn setup spot", ::tpBotHere, (1419.3, -2676.98, 119.731));
+		self MenuOption("custom bot spawns", 4, " temple setup spot", ::tpBotHere, (1278.54, 1688.5, 286.125));
+    }
+	else if( getdvar("mapname") == "mp_cosmodrome")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "og sui setup spot", ::tpBotHere, (1008.86, 1456.87, -123.853));
+		self MenuOption("custom bot spawns", 1, "sui to bomb spot", ::tpBotHere, (1639.62, 374.21, -343.875));
+		self MenuOption("custom bot spawns", 2, "sui setup spot", ::tpBotHere, (1951.11, 639.854, -183.875));
+		self MenuOption("custom bot spawns", 3, "ladder setup spot", ::tpBotHere, (-880.869, 1780.26, -168.584));
+    }
+	else if( getdvar("mapname") == "mp_nuked")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "a bomb setup spot", ::tpBotHere, (784.679, 510.059, -56.875));
+		self MenuOption("custom bot spawns", 1, "b bomb lunge spot", ::tpBotHere, (258.297, -515.447, -60.6755));
+		self MenuOption("custom bot spawns", 2, "mid car setup spot", ::tpBotHere, (-60.8739, 814.493, -9.66869));
+		self MenuOption("custom bot spawns", 3, "yellow spawn spot", ::tpBotHere, (1890.66, 108.606, -63.875));
+		self MenuOption("custom bot spawns", 4, "blue spawn spot", ::tpBotHere, (-1863.26, 139.126, -63.875));
+		self MenuOption("custom bot spawns", 5, "blue ladder spot", ::tpBotHere, (-492.626, 208.107, -10.875));
+    }
+	else if( getdvar("mapname") == "mp_radiation")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (749.971, 78.6141, 290.805));
+		self MenuOption("custom bot spawns", 1, "b bomb ladder spot", ::tpBotHere, (1264.96, 214.128, 128.125));
+		self MenuOption("custom bot spawns", 2, "b bomb setup spot", ::tpBotHere, (1484.31, -473.093, 249.125));
+		self MenuOption("custom bot spawns", 3, "roach setup spot", ::tpBotHere, (443.938, -1770.66, -15.875));
+		self MenuOption("custom bot spawns", 4, "underground setup spot", ::tpBotHere, (51.8617, -797.425, -47.875));
+    }
+	else if( getdvar("mapname") == "mp_")
+    {
+        self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "main setup spot", ::tpBotHere, (749, 78, 290));
+    }
 	else
 	{
-		self MainMenu("custom bot spawn", "bots menu");
-		self MenuOption("custom bot spawn", 0, "only done array for now", ::Test);
+		self MainMenu("custom bot spawns", "bots menu");
+		self MenuOption("custom bot spawns", 0, "IM LAZY AS FUCK", ::Test);
 	}
 
 	self MainMenu("admin menu", "redemption");
@@ -3280,25 +3383,26 @@ tpBotHere(coords)
         if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
         {
 			player setorigin(coords);
+			self iprintln("Bot teleported to ^1" + coords);
 		}
 	}
 }
 
 kickBot(player)
 {
-        players = level.players;
-        playername = players[self.cycle - 1].name;
-        for ( i = 0; i < players.size; i++ )
-        {  
+	players = level.players;
+	playername = players[self.cycle - 1].name;
+	for ( i = 0; i < players.size; i++ )
+	{  
         if(players[self.cycle - 1] isHost())
         {
             
         }
         else
         {
-                    kick( players[self.cycle - 1] getEntityNumber());
+				kick( players[self.cycle - 1] getEntityNumber());
         }
-        }  
+	}  
 }
 
 teleportBot(player)
@@ -8136,7 +8240,9 @@ FakeScav4()
 
 doFakeScav()
 {
-
+	self.EmptyWeap = self getCurrentweapon();
+    WeapEmpClip    = self getWeaponAmmoClip(self.EmptyWeap);
+	WeapEmpStock     = self getWeaponAmmoStock(self.EmptyWeap);
 	self.scavenger_icon = NewClientHudElem( self );
 	self.scavenger_icon.horzAlign = "center";
 	self.scavenger_icon.vertAlign = "middle";
@@ -8148,11 +8254,10 @@ doFakeScav()
 	self.scavenger_icon.alpha = 1;
 	self.scavenger_icon fadeOverTime( 2.5 );
 	self.scavenger_icon.alpha = 0;
-	self.EmptyWeap = self getCurrentweapon();
-    WeapEmpClip    = self getWeaponAmmoClip(self.EmptyWeap);
-	WeapEmpStock     = self getWeaponAmmoStock(self.EmptyWeap);
 	self setweaponammostock(self.EmptyWeap, WeapEmpStock);
 	self setweaponammoclip(self.EmptyWeap, WeapEmpClip - WeapEmpClip);
+	wait 0.5;
+	self setweaponammostock(self.EmptyWeap, WeapEmpStock);
 }
 
 LastStandBind1()
@@ -9468,4 +9573,453 @@ fadeToWhite( startwait, whitescreenwait, fadeintime, fadeouttime )
 		self.whitescreen destroy();
 		self.whitescreen = undefined;
 	}
+}
+
+Canzoom1()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Canzoom))
+    {
+        self iPrintLn("Canzoom bind activated, press [{+Actionslot 1}]");
+        self.Canzoom = true;
+        while(isDefined(self.Canzoom))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread CanzoomFunction();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Canzoom)) 
+    { 
+        self iPrintLn("Canzoom bind ^1deactivated");
+        self.Canzoom = undefined; 
+    }
+}
+
+Canzoom2()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Canzoom))
+    {
+        self iPrintLn("Canzoom bind activated, press [{+Actionslot 2}]");
+        self.Canzoom = true;
+        while(isDefined(self.Canzoom))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread CanzoomFunction();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Canzoom)) 
+    { 
+        self iPrintLn("Canzoom bind ^1deactivated");
+        self.Canzoom = undefined; 
+    }
+}
+
+Canzoom3()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Canzoom))
+    {
+        self iPrintLn("Canzoom bind activated, press [{+Actionslot 3}]");
+        self.Canzoom = true;
+        while(isDefined(self.Canzoom))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread CanzoomFunction();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Canzoom)) 
+    { 
+        self iPrintLn("Canzoom bind ^1deactivated");
+        self.Canzoom = undefined; 
+    }
+}
+
+Canzoom4()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.Canzoom))
+    {
+        self iPrintLn("Canzoom bind activated, press [{+Actionslot 4}]");
+        self.Canzoom = true;
+        while(isDefined(self.Canzoom))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread CanzoomFunction();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.Canzoom)) 
+    { 
+        self iPrintLn("Canzoom bind ^1deactivated");
+        self.Canzoom = undefined; 
+    }
+}
+
+CanzoomFunction()
+{
+    self.canswapWeap = self getCurrentWeapon();
+    self takeWeapon(self.canswapWeap);
+    self giveweapon(self.canswapWeap);
+    wait 0.05;
+    self setSpawnWeapon(self.canswapWeap);
+}
+
+DiscoCamo1()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.discoCamo))
+    {
+        self iPrintLn("Disco camo bind activated, press [{+Actionslot 1}]");
+        self.discoCamo = true;
+        while(isDefined(self.discoCamo))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread DoCamoLoop();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.discoCamo)) 
+    { 
+        self iPrintLn("Disco camo bind ^1deactivated");
+		self notify("Stop_CamoLoop");
+        self.discoCamo = undefined; 
+    }
+}
+
+DiscoCamo2()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.discoCamo))
+    {
+        self iPrintLn("Disco camo bind activated, press [{+Actionslot 2}]");
+        self.discoCamo = true;
+        while(isDefined(self.discoCamo))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread DoCamoLoop();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.discoCamo)) 
+    { 
+        self iPrintLn("Disco camo bind ^1deactivated");
+		self notify("Stop_CamoLoop");
+        self.discoCamo = undefined; 
+    }
+}
+
+DiscoCamo3()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.discoCamo))
+    {
+        self iPrintLn("Disco camo bind activated, press [{+Actionslot 3}]");
+        self.discoCamo = true;
+        while(isDefined(self.discoCamo))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread DoCamoLoop();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.discoCamo)) 
+    { 
+        self iPrintLn("Disco camo bind ^1deactivated");
+		self notify("Stop_CamoLoop");
+        self.discoCamo = undefined; 
+    }
+}
+
+DiscoCamo4()
+{
+    self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.discoCamo))
+    {
+        self iPrintLn("Disco camo bind activated, press [{+Actionslot 4}]");
+        self.discoCamo = true;
+        while(isDefined(self.discoCamo))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread DoCamoLoop();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.discoCamo)) 
+    { 
+        self iPrintLn("Disco camo bind ^1deactivated");
+		self notify("Stop_CamoLoop");
+        self.discoCamo = undefined; 
+    }
+}
+
+
+DoCamoLoop()
+{
+    level endon("game_ended");
+    self endon("death" );	
+	if(!isDefined(self.DoingCamo))
+    {
+		self endon("Stop_CamoLoop");
+		self.DoingCamo = true;
+		for(;;)
+		{
+			rand = randomintrange(0, 16);
+			weap = self getcurrentweapon();
+			self takeweapon(weap);
+			self giveweapon(weap, 0, rand, 0, 0, 0, 0);
+			self setspawnweapon(weap);
+			wait 0.001;
+		}
+		wait 0.001;
+		
+	}
+    else
+    {
+		wait 0.01;
+		self.DoingCamo = undefined;
+		self notify("Stop_CamoLoop");
+    }
+}
+
+saveCPdrop()
+{
+	self.DropZone = self.origin + (0,0,1000);
+	self.DropZoneAngle = self.angle;
+	self iprintln("Carepackage drop zone ^2Saved");
+}
+
+DropDaCP1()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.CPDrop))
+    {
+        self iPrintLn("Drop carepackage bind activated, press [{+Actionslot 1}]");
+        self.CPDrop = true;
+        while(isDefined(self.CPDrop))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                level.DroppingCP = spawn("script_model" ,self.DropZone);  
+				self thread maps\mp\gametypes\_supplydrop::dropcrate(self.DropZone ,self.DropZoneAngle , "supplydrop_mp" ,self ,self.team ,level.DroppingCP);
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.CPDrop)) 
+    { 
+        self iPrintLn("Drop carepackage bind ^1deactivated");
+        self.CPDrop = undefined; 
+    }
+}
+
+DropDaCP2()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.CPDrop))
+    {
+        self iPrintLn("Drop carepackage bind activated, press [{+Actionslot 2}]");
+        self.CPDrop = true;
+        while(isDefined(self.CPDrop))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                level.DroppingCP = spawn("script_model" ,self.DropZone);  
+				self thread maps\mp\gametypes\_supplydrop::dropcrate(self.DropZone ,self.DropZoneAngle , "supplydrop_mp" ,self ,self.team ,level.DroppingCP);
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.CPDrop)) 
+    { 
+        self iPrintLn("Drop carepackage bind ^1deactivated");
+        self.CPDrop = undefined; 
+    }
+}
+
+DropDaCP3()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.CPDrop))
+    {
+        self iPrintLn("Drop carepackage bind activated, press [{+Actionslot 3}]");
+        self.CPDrop = true;
+        while(isDefined(self.CPDrop))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                level.DroppingCP = spawn("script_model" ,self.DropZone);  
+				self thread maps\mp\gametypes\_supplydrop::dropcrate(self.DropZone ,self.DropZoneAngle , "supplydrop_mp" ,self ,self.team ,level.DroppingCP);
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.CPDrop)) 
+    { 
+        self iPrintLn("Drop carepackage bind ^1deactivated");
+        self.CPDrop = undefined; 
+    }
+}
+
+DropDaCP4()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.CPDrop))
+    {
+        self iPrintLn("Drop carepackage bind activated, press [{+Actionslot 4}]");
+        self.CPDrop = true;
+        while(isDefined(self.CPDrop))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                level.DroppingCP = spawn("script_model" ,self.DropZone);  
+				self thread maps\mp\gametypes\_supplydrop::dropcrate(self.DropZone ,self.DropZoneAngle , "supplydrop_mp" ,self ,self.team ,level.DroppingCP);
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.CPDrop)) 
+    { 
+        self iPrintLn("Drop carepackage bind ^1deactivated");
+        self.CPDrop = undefined; 
+    }
+}
+
+IllusionReload1()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.IllusionRe))
+    {
+        self iPrintLn("Illusion reload bind activated, press [{+Actionslot 1}]");
+        self.IllusionRe = true;
+        while(isDefined(self.IllusionRe))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            { 
+				self thread doIllReload();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.IllusionRe)) 
+    { 
+        self iPrintLn("Illusion reload bind ^1deactivated");
+        self.IllusionRe = undefined; 
+    }
+}
+
+IllusionReload2()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.IllusionRe))
+    {
+        self iPrintLn("Illusion reload bind activated, press [{+Actionslot 2}]");
+        self.IllusionRe = true;
+        while(isDefined(self.IllusionRe))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            { 
+				self thread doIllReload();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.IllusionRe)) 
+    { 
+        self iPrintLn("Illusion reload bind ^1deactivated");
+        self.IllusionRe = undefined; 
+    }
+}
+
+IllusionReload3()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.IllusionRe))
+    {
+        self iPrintLn("Illusion reload bind activated, press [{+Actionslot 3}]");
+        self.IllusionRe = true;
+        while(isDefined(self.IllusionRe))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            { 
+				self thread doIllReload();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.IllusionRe)) 
+    { 
+        self iPrintLn("Illusion reload bind ^1deactivated");
+        self.IllusionRe = undefined; 
+    }
+}
+
+IllusionReload4()
+{
+	self endon ("disconnect");
+    self endon ("game_ended");
+    if(!isDefined(self.IllusionRe))
+    {
+        self iPrintLn("Illusion reload bind activated, press [{+Actionslot 4}]");
+        self.IllusionRe = true;
+        while(isDefined(self.IllusionRe))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            { 
+				self thread doIllReload();
+            }
+            wait .001;
+        } 
+    } 
+    else if(isDefined(self.IllusionRe)) 
+    { 
+        self iPrintLn("Illusion reload bind ^1deactivated");
+        self.IllusionRe = undefined; 
+    }
+}
+
+doIllReload()
+{
+	self.EmptyWeap = self getCurrentweapon();
+    WeapEmpClip    = self getWeaponAmmoClip(self.EmptyWeap);
+	WeapEmpStock     = self getWeaponAmmoStock(self.EmptyWeap);
+	self setweaponammostock(self.EmptyWeap, WeapEmpStock);
+	self setweaponammoclip(self.EmptyWeap, WeapEmpClip - WeapEmpClip);
+	wait 0.05;
+	self setweaponammoclip(self.EmptyWeap, WeapEmpClip);
+	self setspawnweapon(self.EmptyWeap);
 }
