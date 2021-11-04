@@ -452,14 +452,15 @@ MenuStructure()
 	self MainMenu("trickshot menu", "redemption");
 	self MenuOption("trickshot menu", 0, "change end game settings", ::MW2EndGame);
 	self MenuOption("trickshot menu", 1, "always knife lunge", ::KnifeLunge);
-	self MenuOption("trickshot menu", 2, "give cowboy", ::doCowboy);
-	self MenuOption("trickshot menu", 3, "give lowered gun", ::doReverseCowboy);
-	self MenuOption("trickshot menu", 4, "upside down screen", ::doUpsideDown); 
-	self MenuOption("trickshot menu", 5, "tilt screen right", ::doTiltRight);
-	self MenuOption("trickshot menu", 6, "tilt screen left", ::doTiltLeft);
-	self MenuOption("trickshot menu", 7, "disable bomb pickup", ::DisableBomb);
-	self MenuOption("trickshot menu", 8, "rmala options", ::SubMenu, "rmala options");
-	self MenuOption("trickshot menu", 9, "after hit menu", ::SubMenu, "after hit"); 
+	self MenuOption("trickshot menu", 2, "infinite canswap", ::InfCanswap);
+	self MenuOption("trickshot menu", 3, "give cowboy", ::doCowboy);
+	self MenuOption("trickshot menu", 4, "give lowered gun", ::doReverseCowboy);
+	self MenuOption("trickshot menu", 5, "upside down screen", ::doUpsideDown); 
+	self MenuOption("trickshot menu", 6, "tilt screen right", ::doTiltRight);
+	self MenuOption("trickshot menu", 7, "tilt screen left", ::doTiltLeft);
+	self MenuOption("trickshot menu", 8, "disable bomb pickup", ::DisableBomb);
+	self MenuOption("trickshot menu", 9, "rmala options", ::SubMenu, "rmala options");
+	self MenuOption("trickshot menu", 10, "after hit menu", ::SubMenu, "after hit"); 
 	
 	self MainMenu("after hit", "trickshot menu");
     self MenuOption("after hit", 0, "sniper rifles", ::SubMenu, "after hit snipers");
@@ -2683,40 +2684,39 @@ RapidFire()
     
 ToggleAmmo()
 {
-
-     if(self.unlimitedammo == 0)
-     {
-          self.unlimitedammo = 1;
-          self iprintln("Infinite Ammo ^2On");
-          self thread unlimited_ammo();
-     }
-     else
-     {
-          self.unlimitedammo = 0;
-          self iprintln("Infinite Ammo ^1Off");
-          self notify("stop_unlimitedammo");
-     }
+	if(self.unlimitedammo == 0)
+	{
+	  self.unlimitedammo = 1;
+	  self iprintln("Infinite Ammo ^2On");
+	  self thread unlimited_ammo();
+	}
+	else
+	{
+	  self.unlimitedammo = 0;
+	  self iprintln("Infinite Ammo ^1Off");
+	  self notify("stop_unlimitedammo");
+	}
 }
 
 unlimited_ammo()
 {
-     self endon("stop_unlimitedammo");
-     self endon("death");
-     for(;;)
-     {
-          currentWeapon = self getcurrentweapon();
-          if ( currentWeapon != "none" )
-          {
-               self setweaponammoclip( currentWeapon, weaponclipsize(currentWeapon) );
-               self givemaxammo( currentWeapon );
-          }
-          currentoffhand = self getcurrentoffhand();
-          if ( currentoffhand != "none" )
-      {
-            self givemaxammo( currentoffhand );
-      }
-     wait .1;
-     }
+	self endon("stop_unlimitedammo");
+	self endon("death");
+	for(;;)
+	{
+		currentWeapon = self getcurrentweapon();
+		if ( currentWeapon != "none" )
+		{
+			self setweaponammoclip( currentWeapon, weaponclipsize(currentWeapon) );
+			self givemaxammo( currentWeapon );
+		}
+		currentoffhand = self getcurrentoffhand();
+		if ( currentoffhand != "none" )
+		{
+			self givemaxammo( currentoffhand );
+		}
+		wait .1;
+	}
 }
 
 KYS()
@@ -10022,4 +10022,34 @@ doIllReload()
 	wait 0.05;
 	self setweaponammoclip(self.EmptyWeap, WeapEmpClip);
 	self setspawnweapon(self.EmptyWeap);
+}
+
+InfCanswap()
+{
+	if(self.InfiniteCan == 0)
+	{
+	  self.InfiniteCan = 1;
+	  self iprintln("Infinite Canswap ^2On");
+	  self thread doInfCan();
+	}
+	else
+	{
+	  self.InfiniteCan = 0;
+	  self iprintln("Infinite Canswap ^1Off");
+	  self notify("stop_infCanswap");
+	}
+}
+
+doInfCan()
+{
+	self endon("disconnect");
+	self endon("stop_infCanswap");
+	currentWeapon = self getCurrentWeapon();
+	for(;;)
+	{
+		self waittill( "weapon_change", currentWeapon );
+		waittillframeend;
+		self takeWeapon(currentWeapon);
+		self giveweapon(currentWeapon);
+	}
 }
