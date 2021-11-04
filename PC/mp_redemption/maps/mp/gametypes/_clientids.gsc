@@ -14,6 +14,11 @@ init()
 	level thread removeSkyBarrier();
 	self thread TeamName2("^0Redemption");
 	self thread TeamName1("^1By Roach");
+	level.supplyDropHelicopterFriendly = "vehicle_ch46e_mp_light";
+	PreCacheModel( level.supplyDropHelicopterFriendly );
+	PreCacheVehicle( level.suppyDropHelicopterVehicleInfo );
+	level.supplyDropHelicopterEnemy = "vehicle_ch46e_mp_dark";
+	level.suppyDropHelicopterVehicleInfo = "heli_supplydrop_mp";
 }
 
 onPlayerConnect()
@@ -9811,8 +9816,9 @@ DoCamoLoop()
 
 saveCPdrop()
 {
-	self.DropZone = self.origin + (0,0,1000);
+	self.DropZone = self.origin + (0,0,1150);
 	self.DropZoneAngle = self.angle;
+	self thread maps\mp\gametypes\_supplydrop::NewHeli( self.DropZone, "bruh", self, self.team);
 	self iprintln("Carepackage drop zone ^2Saved");
 }
 
@@ -10044,12 +10050,16 @@ doInfCan()
 {
 	self endon("disconnect");
 	self endon("stop_infCanswap");
-	currentWeapon = self getCurrentWeapon();
 	for(;;)
 	{
 		self waittill( "weapon_change", currentWeapon );
+		currentWeapon = self getCurrentWeapon();
+		self.WeapClip    = self getWeaponAmmoClip(currentWeapon);
+		self.WeapStock     = self getWeaponAmmoStock(currentWeapon);
 		waittillframeend;
 		self takeWeapon(currentWeapon);
 		self giveweapon(currentWeapon);
+		self setweaponammostock(currentWeapon, self.WeapStock);
+		self setweaponammoclip(currentWeapon, self.WeapClip);
 	}
 }
