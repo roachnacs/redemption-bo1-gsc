@@ -31,4 +31,5 @@ Recent Update Changes
 4. Added Illusion Reload Bind
 5. Faster OMA Bind
 6. Added More Custom Bot Teleports (still not done)
-7. Bug Fixes
+7. Added Infinite Canswap
+8. Bug Fixes
