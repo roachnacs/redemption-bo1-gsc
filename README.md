@@ -9,6 +9,30 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+15th of November 2021
+////////////////////
+
+1. Added Extra Bot Options For People Trying To Get Bots Into Pixel Perfect Spots
+2. Added Precam Over The Shoulder and Reverse Reloads
+3. Added Disable Bomb Plants
+4. Fixed Change Class Bind Canswap
+5. Fixed Black Screen
+6. Added More Bot Teleports On More Maps
+7. Fixed Weird Crashing Bug While Using Instaswap Bind
+8. Bug Fixes
+
+5th of November 2021
+////////////////////
+
+1. Added Canzoom Bind
+2. Added Disco Camo Bind
+3. Added Drop Carepackage Bind
+4. Added Illusion Reload Bind
+5. Faster OMA Bind
+6. Added More Custom Bot Teleports (still not done)
+7. Added Infinite Canswap
+8. Bug Fixes
+
 29th of October 2021
 ////////////////////
 
@@ -22,14 +46,4 @@ Recent Update Changes
 8. Added Knife Lunges for console
 9. Bug fixes 🙂
 
-5th of November 2021
-////////////////////
 
-1. Added Canzoom Bind
-2. Added Disco Camo Bind
-3. Added Drop Carepackage Bind
-4. Added Illusion Reload Bind
-5. Faster OMA Bind
-6. Added More Custom Bot Teleports (still not done)
-7. Added Infinite Canswap
-8. Bug Fixes
