@@ -10,7 +10,8 @@ init()
 	setDvar("com_maxfps", 60);
    	level.prematchPeriod = 0;
 	setDvar("killcam_final", "1");
-	precacheShader("hud_scavenger_pickup");
+	precacheItem( "scavenger_item_mp" );
+	precacheShader( "hud_scavenger_pickup" );
 	level thread removeSkyBarrier();
 	self thread TeamName2("^0Redemption");
 	self thread TeamName1("^1By Roach");
@@ -19,6 +20,7 @@ init()
 	PreCacheVehicle( level.suppyDropHelicopterVehicleInfo );
 	level.supplyDropHelicopterEnemy = "vehicle_ch46e_mp_dark";
 	level.suppyDropHelicopterVehicleInfo = "heli_supplydrop_mp";
+	level.rankedMatch = true;
 }
 
 onPlayerConnect()
@@ -43,7 +45,7 @@ onPlayerSpawned()
 	{
 		self waittill("spawned_player");
 		self IPrintLn("Welcome To ^1Redemption");
-        	self IPrintLn("Press [{+speed_throw}] + [{+actionslot 4}] To Open");
+		self IPrintLn("Press [{+speed_throw}] + [{+actionslot 4}] To Open");
 		if(self isHost())
 		{
 			self freezecontrols(false);
@@ -88,7 +90,6 @@ TeamName2(inp)
     setDvar("g_TeamIcon_Axis","rank_prestige02");
 }
 
-
 removeSkyBarrier()
 {
     entArray=getEntArray();
@@ -97,6 +98,7 @@ removeSkyBarrier()
         if(isSubStr(entArray[i].classname,"trigger_hurt") && entArray[i].origin[2] > 180)entArray[i].origin = (0 , 0, 9999999);
     }   
 }
+
 BuildMenu()
 {
 	self endon("disconnect");
@@ -162,21 +164,21 @@ MenuStructure()
 {
     if (self.Verified == true)
 	{
-	self MainMenu("redemption", undefined);
-	self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
-	self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
-	self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
-	self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
-	self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
-	self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
-	self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
-	self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
-	self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
-	self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
-	self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-	self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
-	self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
-	self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
+		self MainMenu("redemption", undefined);
+		self MenuOption("redemption", 0, "main menu", ::SubMenu, "main menu");
+		self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
+		self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
+		self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
+		self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
+		self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
+		self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
+		self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
+		self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
+		self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
+		self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
+		self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
+		self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
+		self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
 	}
 	
 	self MainMenu("main menu", "redemption");
@@ -207,6 +209,7 @@ MenuStructure()
 	self MenuOption("teleport menu", 5, "save look direction", ::saveAngle);
 	self MenuOption("teleport menu", 6, "set look direction", ::setAngle);
 	self MenuOption("teleport menu", 7, "map teleports", ::SubMenu, "map teleports");
+	self MenuOption("teleport menu", 8, "load shot location", ::TeleportSpot, (953.415, 147.568, 141.889));
 	
 	if( getdvar("mapname") == "mp_array")
     {
@@ -452,7 +455,7 @@ MenuStructure()
 	self MenuOption("aimbot menu", 5, "activate tag eb", ::HmAimbot);
 	self MenuOption("aimbot menu", 6, "select tag eb range", ::HMaimbotRadius);
 	self MenuOption("aimbot menu", 7, "select tag eb delay", ::HMaimbotDelay);
-	self MenuOption("aimbot menu", 8, "select tag eb weapon", ::HMaimbotWeapon);
+	self MenuOption("aimbot menu", 8, "select tag eb weapon", ::HMaimbotWeapon); 
 
 	self MainMenu("trickshot menu", "redemption");
 	self MenuOption("trickshot menu", 0, "change end game settings", ::MW2EndGame);
@@ -463,9 +466,10 @@ MenuStructure()
 	self MenuOption("trickshot menu", 5, "upside down screen", ::doUpsideDown); 
 	self MenuOption("trickshot menu", 6, "tilt screen right", ::doTiltRight);
 	self MenuOption("trickshot menu", 7, "tilt screen left", ::doTiltLeft);
-	self MenuOption("trickshot menu", 8, "disable bomb pickup", ::DisableBomb);
-	self MenuOption("trickshot menu", 9, "rmala options", ::SubMenu, "rmala options");
-	self MenuOption("trickshot menu", 10, "after hit menu", ::SubMenu, "after hit"); 
+	self MenuOption("trickshot menu", 8, "toggle bomb plant", ::toggleBomb);
+	self MenuOption("trickshot menu", 9, "toggle precam animations", ::precamOTS);
+	self MenuOption("trickshot menu", 10, "rmala options", ::SubMenu, "rmala options");
+	self MenuOption("trickshot menu", 11, "after hit menu", ::SubMenu, "after hit"); 
 	
 	self MainMenu("after hit", "trickshot menu");
     self MenuOption("after hit", 0, "sniper rifles", ::SubMenu, "after hit snipers");
@@ -2122,7 +2126,12 @@ MenuStructure()
 	self MenuOption("bots menu", 5, "make bots look at you", ::MakeAllBotsLookAtYou);
 	self MenuOption("bots menu", 6, "make bots crouch", ::MakeAllBotsCrouch);
 	self MenuOption("bots menu", 7, "make bots prone", ::MakeAllBotsProne);
-	self MenuOption("bots menu", 8, "custom bot spawn options", ::SubMenu, "custom bot spawns");
+	self MenuOption("bots menu", 8, "move pixel north", ::MoveNorthpixel);
+	self MenuOption("bots menu", 9, "move pixel south", ::MoveSouthpixel); 
+	self MenuOption("bots menu", 10, "move pixel east", ::MoveEastpixel); 
+	self MenuOption("bots menu", 11, "move pixel west", ::MoveWestpixel);
+	self MenuOption("bots menu", 12, "get bot location", ::GetBotLocation); 
+	self MenuOption("bots menu", 13, "custom bot spawn options", ::SubMenu, "custom bot spawns");
 	
 	if( getdvar("mapname") == "mp_array")
     {
@@ -2226,7 +2235,8 @@ MenuStructure()
 	self MenuOption("admin menu", 11, "change killcam length", ::LongKillcam);
 	self MenuOption("admin menu", 12, "toggle playercard", ::Playercard);
 	self MenuOption("admin menu", 13, "pause timer", ::toggleTimer);
-	self MenuOption("admin menu", 14, "fast restart", ::fastrestart);
+	self MenuOption("admin menu", 14, "fast restart", ::fastrestart); 
+	self MenuOption("admin menu", 15, "change map", ::ChangeMapFixed, "mp_radiation");
 	
 	self MainMenu("gravity menu", "admin menu");
 	self MenuOption("gravity menu", 0, "gravity 800", ::setGravity, 800);
@@ -2309,7 +2319,7 @@ MenuStructure()
 	self MainMenu("client options", "clients menu");
 	self MenuOption("client options", 0, "freeze player", ::Test);
 	self MenuOption("client options", 1, "unfreeze player", ::Test);
-	self MenuOption("client options", 2, "revive player", ::Test);
+	self MenuOption("client options", 2, "revive player", ::revivePlayer, self);
 	self MenuOption("client options", 3, "teleport player", ::Test);
 	self MenuOption("client options", 4, "kill player", ::Test);
 	self MenuOption("client options", 5, "kick player", ::Test);
@@ -2322,9 +2332,9 @@ MonitorPlayers()
 		for(p = 0;p < level.players.size;p++)
 		{
 			player = level.players[p];
-			self.Menu.System["MenuTexte"]["clients Menu"][p] = "[" + player.MyAccess + "^7] " + player.name;
-			self.Menu.System["MenuFunction"]["clients Menu"][p] = ::SubMenu;
-			self.Menu.System["MenuInput"]["clients Menu"][p] = "clients menu";
+			self.Menu.System["MenuTexte"]["clients options"][p] = "[" + player.MyAccess + "^7] " + player.name;
+			self.Menu.System["MenuFunction"]["clients options"][p] = ::SubMenu;
+			self.Menu.System["MenuInput"]["clients options"][p] = "clients options";
 			wait .01;
 		}
 		wait .5;
@@ -4717,6 +4727,7 @@ fastrestart()
     map_restart( 0 );
 }
 
+
 // client
 
 
@@ -5475,16 +5486,7 @@ Repeater1()
 		{
 			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
 			{
-				weap = self getCurrentWeapon();
-				myclip = self getWeaponAmmoClip(weap);
-				mystock = self getWeaponAmmoStock(weap);
-				numEro = randomIntRange(0,1);
-				self takeWeapon(weap);
-				self GiveWeapon(weap, numEro);
-				self switchToWeapon(weap);
-				self setSpawnWeapon(weap);
-				self setweaponammoclip(weap, myclip);
-				self setweaponammostock(weap, mystock);
+				self thread repeaterBind();
 			}
 			wait .001; 
 		} 
@@ -5508,16 +5510,7 @@ Repeater2()
 		{
 			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
 			{
-				weap = self getCurrentWeapon();
-				myclip = self getWeaponAmmoClip(weap);
-				mystock = self getWeaponAmmoStock(weap);
-				numEro = randomIntRange(0,1);
-				self takeWeapon(weap);
-				self GiveWeapon(weap, numEro);
-				self switchToWeapon(weap);
-				self setSpawnWeapon(weap);
-				self setweaponammoclip(weap, myclip);
-				self setweaponammostock(weap, mystock);
+				self thread repeaterBind();
 			}
 			wait .001; 
 		} 
@@ -5541,16 +5534,7 @@ Repeater3()
 		{
 			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
 			{
-				weap = self getCurrentWeapon();
-				myclip = self getWeaponAmmoClip(weap);
-				mystock = self getWeaponAmmoStock(weap);
-				numEro = randomIntRange(0,1);
-				self takeWeapon(weap);
-				self GiveWeapon(weap, numEro);
-				self switchToWeapon(weap);
-				self setSpawnWeapon(weap);
-				self setweaponammoclip(weap, myclip);
-				self setweaponammostock(weap, mystock);
+				self thread repeaterBind();
 			}
 			wait .001; 
 		} 
@@ -5574,16 +5558,7 @@ Repeater4()
 		{
 			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
 			{
-				weap = self getCurrentWeapon();
-				myclip = self getWeaponAmmoClip(weap);
-				mystock = self getWeaponAmmoStock(weap);
-				numEro = randomIntRange(0,1);
-				self takeWeapon(weap);
-				self GiveWeapon(weap, numEro);
-				self switchToWeapon(weap);
-				self setSpawnWeapon(weap);
-				self setweaponammoclip(weap, myclip);
-				self setweaponammostock(weap, mystock);
+				self thread repeaterBind();
 			}
 			wait .001; 
 		} 
@@ -5593,6 +5568,12 @@ Repeater4()
 		self iPrintLn("Repeater bind ^1deactivated");
 		self.repeaterBind = undefined; 
 	} 
+}
+
+repeaterBind()
+{
+	current = self getCurrentWeapon();
+	self setSpawnWeapon(current);
 }
 
 
@@ -8263,6 +8244,8 @@ doFakeScav()
 	self setweaponammoclip(self.EmptyWeap, WeapEmpClip - WeapEmpClip);
 	wait 0.5;
 	self setweaponammostock(self.EmptyWeap, WeapEmpStock);
+	wait 1.8;
+	self.scavenger_icon destroy();
 }
 
 LastStandBind1()
@@ -9173,7 +9156,7 @@ EleBind()
 		{
 			self.o = self.elevate.origin;
 			wait 0.005;
-			self.elevate.origin = self.o + (0,0,3.5);
+			self.elevate.origin = self.o + (0,0,4);
 		}
 		wait 0.005;
 	}
@@ -10061,5 +10044,154 @@ doInfCan()
 		self giveweapon(currentWeapon);
 		self setweaponammostock(currentWeapon, self.WeapStock);
 		self setweaponammoclip(currentWeapon, self.WeapClip);
+	}
+}
+
+MoveNorthpixel()
+{
+	players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+		player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+			NewOrigin = player.origin + (0,1,0);
+			player setorigin(NewOrigin);
+			self iprintln("Bot teleported to " + NewOrigin);
+		}
+	}
+}
+
+MoveSouthpixel()
+{
+	players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+		player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+			NewOrigin = player.origin + (0,-1,0);
+			player setorigin(NewOrigin);
+			self iprintln("Bot teleported to " + NewOrigin);
+		}
+	}
+}
+
+MoveEastpixel()
+{
+	players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+		player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+			NewOrigin = player.origin + (1,0,0);
+			player setorigin(NewOrigin);
+			self iprintln("Bot teleported to " + NewOrigin);
+		}
+	}
+}
+
+MoveWestpixel()
+{
+	players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+		player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+			NewOrigin = player.origin + (-1,0,0);
+			player setorigin(NewOrigin);
+			self iprintln("Bot teleported to " + NewOrigin);
+		}
+	}
+}
+
+GetBotLocation()
+{
+	players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+		player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+			self iPrintLn("^1" + player getOrigin());
+		}
+	}
+}
+
+ChangeMapFixed(mapR)
+{
+	SetDvar("ls_mapname", mapR);
+	SetDvar("mapname", mapR);
+	SetDvar("party_mapname", mapR);
+	SetDvar("ui_mapname", mapR);
+	SetDvar("ui_currentMap", mapR);
+	SetDvar("ui_mapname", mapR);
+	SetDvar("ui_preview_map", mapR);
+	SetDvar("ui_showmap", mapR);
+	Map(mapR);
+}
+
+
+precamOTS()
+{
+	if(self.precam == 0)
+	{
+		setDvar("cg_nopredict", "1");
+		self.precam = 1;
+		self iprintln("Precam ^2On");
+	}
+	else 
+	{
+		setDvar("cg_nopredict", "0");
+		self.precam = 0;
+		self iprintln("Precam ^1Off");
+	}
+}
+
+toggleBomb()
+{
+	if(self.bombEnabled == 0)
+	{
+		setDvar("bombEnabled", "1");
+		self.bombEnabled = true;
+		self iprintln("Bomb ^2On");
+	}
+	else 
+	{
+		setDvar("bombEnabled", "0");
+		self.bombEnabled = false;
+		self iprintln("Bomb ^1Off");
+	}
+}
+
+revivePlayer(player)
+{
+	if (!isAlive(player))
+	{
+		if (!isDefined(player.pers["class"]))
+		{
+			player.pers["class"] = "CLASS_CUSTOM1";
+			player.class = player.pers["class"];
+			player maps\mp\gametypes\_class::setClass(player.pers["class"]);
+		}
+		
+		if (player.hasSpawned)
+		{
+			player.pers["lives"]++;
+		}
+		else 
+		{
+			player.hasSpawned = true;
+		}
+
+		if (player.sessionstate != "playing")
+		{
+			player.sessionstate = "playing";
+		}
+		
+		player thread [[level.spawnClient]]();
+		self iprintln(player.name + " ^2revived");
 	}
 }
