@@ -68,22 +68,45 @@ onPlayerSpawned()
             self.shaxTakeaway = 0;
             self.shaxCycle = 0;
             self.shaxGun = "Undefined";
-            self.MyAccess = "^1Host";
-			self thread removeSkyBarrier();
+            self.MyAccess = "^2Host";
+            self thread removeSkyBarrier();
             self thread BuildMenu();
         }
         else if(self.Verified == true)
         {
             self.Verified = true;
-            self.MyAccess = "^1Verified";
+            self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
+            self.OMAWeapon = "briefcase_bomb_mp";
+            self.BarColor  = (255, 255, 255);
+            self.VIP = true;
+            self.Admin = true;
+            self.CoHost = true;
+            self.boltspeed = 2;
+            self.ClassType = 1;
+            self.isNotShaxWeapon = false;
+            self.shineShaxGunCheck = 0;
+            self.shaxTakeaway = 0;
+            self.shaxCycle = 0;
+            self.shaxGun = "Undefined";
+            self.MyAccess = "^3Verified";
             self freezecontrols(false);
             self thread BuildMenu();
         }
         else if ( self.Verified == false)
         {
-            self.MyAccess = "";
+			players = level.players;
+            self.MyAccess = "^1Bot";
             self freezecontrols(true);
-            self thread freezeAllBots();
+			for ( i = 0; i < players.size; i++ )
+			{   
+				player = players[i];
+				if(IsDefined(player.pers[ "isBot" ]) && player.pers["isBot"])
+				{
+					player freezeControls(true);
+				}
+				self.frozenbots = 1;
+				wait 0.05;
+			}
             self clearperks();
         }
     }
@@ -163,7 +186,7 @@ BuildMenu()
         else if(self usebuttonpressed() && self.MenuOpen == true)
         {
                 wait 0.2;
-                if(self.Menu.System["MenuRoot"]=="Clients Menu") self.Menu.System["ClientIndex"]=self.Menu.System["MenuCurser"];
+                if(self.Menu.System["MenuRoot"]=="clients menu") self.Menu.System["ClientIndex"]=self.Menu.System["MenuCurser"];
                 self thread [[self.Menu.System["MenuFunction"][self.Menu.System["MenuRoot"]][self.Menu.System["MenuCurser"]]]](self.Menu.System["MenuInput"][self.Menu.System["MenuRoot"]][self.Menu.System["MenuCurser"]]);
                 wait 0.2;
         }
@@ -187,8 +210,11 @@ MenuStructure()
         self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
         self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
         self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-        self MenuOption("redemption", 11, "admin menu", ::SubMenu, "admin menu");
-        self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
+		self MenuOption("redemption", 11, "clients menu", ::SubMenu, "clients menu");
+	}
+	if (self isHost())
+    {
+        self MenuOption("redemption", 12, "admin menu", ::SubMenu, "admin menu");
         self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
     }
     
@@ -620,7 +646,7 @@ MenuStructure()
     self MenuOption("binds page 3 menu", 0, "reverse elevator bind", ::SubMenu, "reverse elevator bind");
     self MenuOption("binds page 3 menu", 1, "shax swap bind", ::SubMenu, "shax swap bind");
     self MenuOption("binds page 3 menu", 2, "W.I.P order binds in a sequence", ::Test);
-	
+    
     self MainMenu("shax swap bind", "binds page 3 menu");
     self MenuOption("shax swap bind", 0, "select shax weapon", ::SubMenu, "shax swap weapon");
     self MenuOption("shax swap bind", 1, "shax swap bind [{+Actionslot 1}]", ::ShaxSwap1); 
@@ -630,12 +656,12 @@ MenuStructure()
     
     self MainMenu("shax swap weapon", "shax swap bind");
     self MenuOption("shax swap weapon", 0, "shax swap submachine guns", ::SubMenu, "shax swap submachine guns");
-	self MenuOption("shax swap weapon", 1, "shax swap assault rifles", ::SubMenu, "shax swap assault rifles");
-	self MenuOption("shax swap weapon", 2, "shax swap shotguns", ::SubMenu, "shax swap shotguns");
-	self MenuOption("shax swap weapon", 3, "shax swap light machine guns", ::SubMenu, "shax swap lmgs");
-	self MenuOption("shax swap weapon", 4, "shax swap snipers", ::SubMenu, "shax swap snipers");
-	self MenuOption("shax swap weapon", 5, "shax swap pistols", ::SubMenu, "shax swap pistols");
-	self MenuOption("shax swap weapon", 6, "shax swap rpg", ::ShaxWeapon, 37);
+    self MenuOption("shax swap weapon", 1, "shax swap assault rifles", ::SubMenu, "shax swap assault rifles");
+    self MenuOption("shax swap weapon", 2, "shax swap shotguns", ::SubMenu, "shax swap shotguns");
+    self MenuOption("shax swap weapon", 3, "shax swap light machine guns", ::SubMenu, "shax swap lmgs");
+    self MenuOption("shax swap weapon", 4, "shax swap snipers", ::SubMenu, "shax swap snipers");
+    self MenuOption("shax swap weapon", 5, "shax swap pistols", ::SubMenu, "shax swap pistols");
+    self MenuOption("shax swap weapon", 6, "shax swap rpg", ::ShaxWeapon, 37);
     
     self MainMenu("shax swap submachine guns", "shax swap weapon");
     self MenuOption("shax swap submachine guns", 0, "shax mp5k", ::ShaxWeapon, 8); 
@@ -647,44 +673,44 @@ MenuStructure()
     self MenuOption("shax swap submachine guns", 6, "shax mpl", ::ShaxWeapon, 4);
     self MenuOption("shax swap submachine guns", 7, "shax spectre", ::ShaxWeapon, 11);
     self MenuOption("shax swap submachine guns", 8, "shax kiparis", ::ShaxWeapon, 3);
-	
-	self MainMenu("shax swap assault rifles", "shax swap weapon");
+    
+    self MainMenu("shax swap assault rifles", "shax swap weapon");
     self MenuOption("shax swap assault rifles", 0, "shax m16", ::ShaxWeapon, 12);
-	self MenuOption("shax swap assault rifles", 1, "shax enfield", ::ShaxWeapon, 13);
-	self MenuOption("shax swap assault rifles", 2, "shax m14", ::ShaxWeapon, 14);
-	self MenuOption("shax swap assault rifles", 3, "shax famas", ::ShaxWeapon, 15);
-	self MenuOption("shax swap assault rifles", 4, "shax galil", ::ShaxWeapon, 16);
-	self MenuOption("shax swap assault rifles", 5, "shax aug", ::ShaxWeapon, 17);
-	self MenuOption("shax swap assault rifles", 6, "shax fn fal", ::ShaxWeapon, 6);
-	self MenuOption("shax swap assault rifles", 7, "shax ak47", ::ShaxWeapon, 18);
-	self MenuOption("shax swap assault rifles", 8, "shax commando", ::ShaxWeapon, 19);
-	self MenuOption("shax swap assault rifles", 9, "shax g11", ::ShaxWeapon, 20);
-	
-	self MainMenu("shax swap shotguns", "shax swap weapon");
+    self MenuOption("shax swap assault rifles", 1, "shax enfield", ::ShaxWeapon, 13);
+    self MenuOption("shax swap assault rifles", 2, "shax m14", ::ShaxWeapon, 14);
+    self MenuOption("shax swap assault rifles", 3, "shax famas", ::ShaxWeapon, 15);
+    self MenuOption("shax swap assault rifles", 4, "shax galil", ::ShaxWeapon, 16);
+    self MenuOption("shax swap assault rifles", 5, "shax aug", ::ShaxWeapon, 17);
+    self MenuOption("shax swap assault rifles", 6, "shax fn fal", ::ShaxWeapon, 6);
+    self MenuOption("shax swap assault rifles", 7, "shax ak47", ::ShaxWeapon, 18);
+    self MenuOption("shax swap assault rifles", 8, "shax commando", ::ShaxWeapon, 19);
+    self MenuOption("shax swap assault rifles", 9, "shax g11", ::ShaxWeapon, 20);
+    
+    self MainMenu("shax swap shotguns", "shax swap weapon");
     self MenuOption("shax swap shotguns", 0, "shax olympia", ::ShaxWeapon, 21);
-	self MenuOption("shax swap shotguns", 1, "shax stakeout", ::ShaxWeapon, 22);
-	self MenuOption("shax swap shotguns", 2, "shax spas-12", ::ShaxWeapon, 23);
-	self MenuOption("shax swap shotguns", 3, "shax hs10", ::ShaxWeapon, 24);
-	
-	self MainMenu("shax swap lmgs", "shax swap weapon");
+    self MenuOption("shax swap shotguns", 1, "shax stakeout", ::ShaxWeapon, 22);
+    self MenuOption("shax swap shotguns", 2, "shax spas-12", ::ShaxWeapon, 23);
+    self MenuOption("shax swap shotguns", 3, "shax hs10", ::ShaxWeapon, 24);
+    
+    self MainMenu("shax swap lmgs", "shax swap weapon");
     self MenuOption("shax swap lmgs", 0, "shax hk21", ::ShaxWeapon, 25);
-	self MenuOption("shax swap lmgs", 1, "shax rpk", ::ShaxWeapon, 26);
-	self MenuOption("shax swap lmgs", 2, "shax m60", ::ShaxWeapon, 27);
-	self MenuOption("shax swap lmgs", 3, "shax stoner63", ::ShaxWeapon, 5);
-	
-	self MainMenu("shax swap snipers", "shax swap weapon");
+    self MenuOption("shax swap lmgs", 1, "shax rpk", ::ShaxWeapon, 26);
+    self MenuOption("shax swap lmgs", 2, "shax m60", ::ShaxWeapon, 27);
+    self MenuOption("shax swap lmgs", 3, "shax stoner63", ::ShaxWeapon, 5);
+    
+    self MainMenu("shax swap snipers", "shax swap weapon");
     self MenuOption("shax swap snipers", 0, "shax dragunov", ::ShaxWeapon, 28);
-	self MenuOption("shax swap snipers", 1, "shax wa2000", ::ShaxWeapon, 29);
-	self MenuOption("shax swap snipers", 2, "shax l96a1", ::ShaxWeapon, 30);
-	self MenuOption("shax swap snipers", 3, "shax psg1", ::ShaxWeapon, 31);
-	
-	self MainMenu("shax swap pistols", "shax swap weapon");
+    self MenuOption("shax swap snipers", 1, "shax wa2000", ::ShaxWeapon, 29);
+    self MenuOption("shax swap snipers", 2, "shax l96a1", ::ShaxWeapon, 30);
+    self MenuOption("shax swap snipers", 3, "shax psg1", ::ShaxWeapon, 31);
+    
+    self MainMenu("shax swap pistols", "shax swap weapon");
     self MenuOption("shax swap pistols", 0, "shax asp", ::ShaxWeapon, 32);
-	self MenuOption("shax swap pistols", 1, "shax m1911", ::ShaxWeapon, 33);
-	self MenuOption("shax swap pistols", 2, "shax makarov", ::ShaxWeapon, 34);
-	self MenuOption("shax swap pistols", 3, "shax python", ::ShaxWeapon, 35);
-	self MenuOption("shax swap pistols", 4, "shax cz75", ::ShaxWeapon, 36);
-	
+    self MenuOption("shax swap pistols", 1, "shax m1911", ::ShaxWeapon, 33);
+    self MenuOption("shax swap pistols", 2, "shax makarov", ::ShaxWeapon, 34);
+    self MenuOption("shax swap pistols", 3, "shax python", ::ShaxWeapon, 35);
+    self MenuOption("shax swap pistols", 4, "shax cz75", ::ShaxWeapon, 36);
+    
     self MainMenu("reverse elevator bind", "binds page 3 menu");
     self MenuOption("reverse elevator bind", 0, "reverse elevator bind [{+Actionslot 1}]", ::ReElevatorBind1);
     self MenuOption("reverse elevator bind", 1, "reverse elevator bind [{+Actionslot 4}]", ::ReElevatorBind4);
@@ -2464,7 +2490,7 @@ MenuStructure()
     self MenuOption("ladder menu", 9, "ladder knockback 999", ::LadderYeet, 999);
     
     self MainMenu("pickup radius menu", "admin menu");
-	self MenuOption("pickup radius menu", 0, "pickup radius 0)", ::expickup, 0);
+    self MenuOption("pickup radius menu", 0, "pickup radius 0", ::expickup, 0);
     self MenuOption("pickup radius menu", 1, "pickup radius 100 (default)", ::expickup, 100);
     self MenuOption("pickup radius menu", 2, "pickup radius 250", ::expickup, 250);
     self MenuOption("pickup radius menu", 3, "pickup radius 500", ::expickup, 500);
@@ -2478,7 +2504,7 @@ MenuStructure()
     self MenuOption("pickup radius menu", 11, "pickup radius 8000", ::expickup, 8000);
     
     self MainMenu("grenade radius menu", "admin menu");
-	self MenuOption("grenade radius menu", 0, "pickup radius 0", ::grenaderadius, 0);
+    self MenuOption("grenade radius menu", 0, "pickup radius 0", ::grenaderadius, 0);
     self MenuOption("grenade radius menu", 1, "pickup radius 100 (default)", ::grenaderadius, 100);
     self MenuOption("grenade radius menu", 2, "pickup radius 250", ::grenaderadius, 250);
     self MenuOption("grenade radius menu", 3, "pickup radius 500", ::grenaderadius, 500);
@@ -2494,23 +2520,29 @@ MenuStructure()
     self MainMenu("dev menu", "redemption");
     self MenuOption("dev menu", 0, "get map name", ::MapName);
     self MenuOption("dev menu", 1, "get corods", ::Coords);
-    
-        
+     
     self MainMenu("clients menu", "redemption");
     for (p = 0; p < level.players.size; p++) {
         player = level.players[p];
-        self MenuOption("clients menu", p, "[" + player.MyAccess + "^7] " + player.name + "", ::SubMenu, "client options");
+        self MenuOption("clients menu", p, "[" + player.MyAccess + "^7] " + player.name + "", ::SubMenu, "client function");
     }
     self thread MonitorPlayers();
     
-    self MainMenu("client options", "clients menu");
-    self MenuOption("client options", 0, "freeze player", ::Test);
-    self MenuOption("client options", 1, "unfreeze player", ::Test);
-    self MenuOption("client options", 2, "revive player", ::revivePlayer, self);
-    self MenuOption("client options", 3, "teleport player", ::Test);
-    self MenuOption("client options", 4, "kill player", ::Test);
-    self MenuOption("client options", 5, "kick player", ::Test);
+    self MainMenu("client function", "clients menu");
+    self MenuOption("client function", 0, "verify player", ::Verify);
+    self MenuOption("client function", 1, "unverified player", ::doUnverif);
+    self MenuOption("client function", 2, "freeze player", ::freezeClient);
+	self MenuOption("client function", 3, "unfreeze player", ::unfreezeClient);
+    self MenuOption("client function", 4, "teleport player to crosshair", ::teleportClient);
+    self MenuOption("client function", 5, "crouch player", ::crouchClient);
+    self MenuOption("client function", 6, "prone player", ::proneClient);
+	self MenuOption("client function", 7, "stand player", ::standClient);
+	self MenuOption("client function", 8, "revive player", ::reviveClient);
+	self MenuOption("client function", 9, "kill player", ::killClient);
+	self MenuOption("client function", 10, "kick player", ::kickClient);
+	
 }
+
 MonitorPlayers()
 {
     self endon("disconnect");
@@ -2521,10 +2553,10 @@ MonitorPlayers()
             player = level.players[p];
             self.Menu.System["MenuTexte"]["clients options"][p] = "[" + player.MyAccess + "^7] " + player.name;
             self.Menu.System["MenuFunction"]["clients options"][p] = ::SubMenu;
-            self.Menu.System["MenuInput"]["clients options"][p] = "clients options";
+            self.Menu.System["MenuInput"]["clients options"][p] = "client function";
             wait .01;
         }
-        wait .5;
+        wait .005;
     }
 }
 MainMenu(Menu, Return)
@@ -2533,6 +2565,7 @@ MainMenu(Menu, Return)
     self.Menu.System["MenuCount"] = 0;
     self.Menu.System["MenuPrevious"][Menu] = Return;
 }
+
 MenuOption(Menu, Index, Texte, Function, Input)
 {
     self.Menu.System["MenuTexte"][Menu][Index] = Texte;
@@ -2548,7 +2581,7 @@ SubMenu(input)
     self.Menu.System["Credits"] destroy();
     self.Menu.System["Title"] destroy();
     self thread LoadMenu(input);
-    if(self.Menu.System["MenuRoot"]=="Client Function")
+    if(self.Menu.System["MenuRoot"]=="client function")
     {
     self.Menu.System["Title"] destroy();
     player = level.players[self.Menu.System["ClientIndex"]];
@@ -2652,18 +2685,15 @@ elemFade(time, alpha)
     self.alpha = alpha;
 }
 
-freezeClient()
-{
-   player = level.players[self.Menu.System["ClientIndex"]];
-    player freezeControls(true);
-    self iprintln(player.name + " ^1Frozen");
-}
+// client
 
-unfreezeClient()
+UnverifMe()
 {
-    player = level.players[self.Menu.System["ClientIndex"]];
-    player freezeControls(true);
-    self iprintln(player.name + " ^2Unfrozen");
+    self.Verified = false;
+    self.VIP = false;
+    self.Admin = false;
+    self.CoHost = false;
+    self suicide();
 }
 
 doUnverif()
@@ -2671,7 +2701,7 @@ doUnverif()
     player = level.players[self.Menu.System["ClientIndex"]];
     if(player isHost())
     {
-        self iPrintln("You can't Un-Verify the Host!");
+        self iPrintln("You can't un-verify the host!");
     }
     else
     {
@@ -2684,21 +2714,12 @@ doUnverif()
     }
 }
 
-UnverifMe()
-{
-    self.Verified = false;
-    self.VIP = false;
-    self.Admin = false;
-    self.CoHost = false;
-    self suicide();
-}
-
 Verify()
 {
     player = level.players[self.Menu.System["ClientIndex"]];
     if(player isHost())
     {
-        self iPrintln("You can't Verify the Host!");
+        self iPrintln("You can't verify the host!");
     }
     else
     {
@@ -2710,6 +2731,131 @@ Verify()
         self iPrintln( player.name + " is ^1Verified" );
     }
 }
+
+freezeClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't freeze the host!");
+    }
+    else
+    {
+        player freezeControls(true);
+		self iprintln(player.name + " ^1Frozen");
+    }
+}
+
+unfreezeClient()
+{
+    player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't freeze the host!");
+    }
+    else
+    {
+        player freezeControls(false);
+		self iprintln(player.name + " ^Unfrozen");
+    }
+}
+
+teleportClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't teleport the host!");
+    }
+    else
+    {
+        player setorigin(bullettrace(self gettagorigin("j_head"), self gettagorigin("j_head") + anglesToForward(self getplayerangles()) * 1000000, 0, self)["position"]);
+		self iprintln(player.name + " ^2Has been teleported");
+    }
+}
+
+crouchClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't crouch the host!");
+    }
+    else
+    {
+        player setstance("crouch");
+		self iprintln(player.name + " ^2Has been crouched");
+    }
+}
+
+proneClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't prone the host!");
+    }
+    else
+    {
+        player setstance("prone");
+		self iprintln(player.name + " ^2Has been proned");
+    }
+}
+
+standClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't stand the host!");
+    }
+    else
+    {
+        player setstance("stand");
+		self iprintln(player.name + " ^2Has been made to stand");
+    }
+}
+
+reviveClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+    {
+        if (!isAlive(player))
+		{
+			player revivePlayer(player, true);
+		}
+		self iprintln(player.name + " ^2Has been revived");
+    }
+}
+
+killClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't kill the host!");
+    }
+    else
+    {
+        player suicide();
+		self iprintln(player.name + " ^2Has been killed");
+    }
+}
+
+kickClient()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't kick the host!");
+    }
+    else
+    {
+        kick( player getEntityNumber());
+		self iprintln(player.name + " ^2Has been kicked");
+    }
+}
+
 
 
 AllPlayersKilled()
@@ -3557,7 +3703,7 @@ kickAllBots()
             kick( player getEntityNumber());
         }
     }
-self iprintln("All bots ^1Kicked");     
+	self iprintln("All bots ^1Kicked");     
 }
 
 
@@ -11874,137 +12020,137 @@ ShaxWeapon(weap)
         self iprintln("Shax Weapon Set to spectre_mp");
         self.shaxGun = "spectre_mp";
     }
-	else if(weap == 12)
+    else if(weap == 12)
     {
         self iprintln("Shax Weapon Set to m16_mp");
         self.shaxGun = "m16_mp";
     }
-	else if(weap == 13)
+    else if(weap == 13)
     {
         self iprintln("Shax Weapon Set to enfield_mp");
         self.shaxGun = "enfield_mp";
     }
-	else if(weap == 14)
+    else if(weap == 14)
     {
         self iprintln("Shax Weapon Set to m14_mp");
         self.shaxGun = "m14_mp";
     }
-	else if(weap == 15)
+    else if(weap == 15)
     {
         self iprintln("Shax Weapon Set to famas_mp");
         self.shaxGun = "famas_mp";
     }
-	else if(weap == 16)
+    else if(weap == 16)
     {
         self iprintln("Shax Weapon Set to galil_mp");
         self.shaxGun = "galil_mp";
     }
-	else if(weap == 17)
+    else if(weap == 17)
     {
         self iprintln("Shax Weapon Set to aug_mp");
         self.shaxGun = "aug_mp";
     }
-	else if(weap == 18)
+    else if(weap == 18)
     {
         self iprintln("Shax Weapon Set to ak47_mp");
         self.shaxGun = "ak47_mp";
     }
-	else if(weap == 19)
+    else if(weap == 19)
     {
         self iprintln("Shax Weapon Set to commando_mp");
         self.shaxGun = "commando_mp";
     }
-	else if(weap == 20)
+    else if(weap == 20)
     {
         self iprintln("Shax Weapon Set to g11_mp");
         self.shaxGun = "g11_mp";
     }
-	else if(weap == 21)
+    else if(weap == 21)
     {
         self iprintln("Shax Weapon Set to rottweil72_mp");
         self.shaxGun = "rottweil72_mp";
     }
-	else if(weap == 22)
+    else if(weap == 22)
     {
         self iprintln("Shax Weapon Set to ithaca_grip_mp");
         self.shaxGun = "ithaca_grip_mp";
     }
-	else if(weap == 23)
+    else if(weap == 23)
     {
         self iprintln("Shax Weapon Set to spas_mp");
         self.shaxGun = "spas_mp";
     }
-	else if(weap == 24)
+    else if(weap == 24)
     {
         self iprintln("Shax Weapon Set to hs10_mp");
         self.shaxGun = "hs10_mp";
     }
-	else if(weap == 25)
+    else if(weap == 25)
     {
         self iprintln("Shax Weapon Set to hk21_mp");
         self.shaxGun = "hk21_mp";
     }
-	else if(weap == 26)
+    else if(weap == 26)
     {
         self iprintln("Shax Weapon Set to rpk_mp");
         self.shaxGun = "rpk_mp";
     }
-	else if(weap == 27)
+    else if(weap == 27)
     {
         self iprintln("Shax Weapon Set to m60_mp");
         self.shaxGun = "m60_mp";
     }
-	else if(weap == 28)
+    else if(weap == 28)
     {
         self iprintln("Shax Weapon Set to dragunov_mp");
         self.shaxGun = "dragunov_mp";
     }
-	else if(weap == 29)
+    else if(weap == 29)
     {
         self iprintln("Shax Weapon Set to wa2000_mp");
         self.shaxGun = "wa2000_mp";
     }
-	else if(weap == 30)
+    else if(weap == 30)
     {
         self iprintln("Shax Weapon Set to l96a1_mp");
         self.shaxGun = "l96a1_mp";
     }
-	else if(weap == 31)
+    else if(weap == 31)
     {
         self iprintln("Shax Weapon Set to psg1_mp");
         self.shaxGun = "psg1_mp";
     }
-	else if(weap == 32)
+    else if(weap == 32)
     {
         self iprintln("Shax Weapon Set to asp_mp");
         self.shaxGun = "asp_mp";
     }
-	else if(weap == 33)
+    else if(weap == 33)
     {
         self iprintln("Shax Weapon Set to m1911_mp");
         self.shaxGun = "m1911_mp";
     }
-	else if(weap == 34)
+    else if(weap == 34)
     {
         self iprintln("Shax Weapon Set to makarov_mp");
         self.shaxGun = "makarov_mp";
     }
-	else if(weap == 35)
+    else if(weap == 35)
     {
         self iprintln("Shax Weapon Set to python_mp");
         self.shaxGun = "python_mp";
     }
-	else if(weap == 36)
+    else if(weap == 36)
     {
         self iprintln("Shax Weapon Set to cz75_mp");
         self.shaxGun = "cz75_mp";
     }
-	else if(weap == 37)
+    else if(weap == 37)
     {
         self iprintln("Shax Weapon Set to rpg_mp");
         self.shaxGun = "rpg_mp";
     }
-	
+    
 }
 
 shaxKCCheck()
@@ -12060,132 +12206,132 @@ shaxKCCheck()
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.45;
     }
-	else if(isSubStr(self.shaxGun, "m16"))
+    else if(isSubStr(self.shaxGun, "m16"))
     {
         self.shineShaxGunCheck = 0.8;
         self.shaxTakeaway = 0.32;
     }
-	else if(isSubStr(self.shaxGun, "enfield"))
+    else if(isSubStr(self.shaxGun, "enfield"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.45;
     }
-	else if(isSubStr(self.shaxGun, "m14"))
+    else if(isSubStr(self.shaxGun, "m14"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.523;
     }
-	else if(isSubStr(self.shaxGun, "famas"))
+    else if(isSubStr(self.shaxGun, "famas"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.395;
     }
-	else if(isSubStr(self.shaxGun, "galil"))
+    else if(isSubStr(self.shaxGun, "galil"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.59;
     }
-	else if(isSubStr(self.shaxGun, "aug"))
+    else if(isSubStr(self.shaxGun, "aug"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.364;
     }
-	else if(isSubStr(self.shaxGun, "ak47"))
+    else if(isSubStr(self.shaxGun, "ak47"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.43;
     }
-	else if(isSubStr(self.shaxGun, "commando"))
+    else if(isSubStr(self.shaxGun, "commando"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.22;
     }
-	else if(isSubStr(self.shaxGun, "g11"))
+    else if(isSubStr(self.shaxGun, "g11"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.43;
     }
-	else if(isSubStr(self.shaxGun, "rottweil72"))
+    else if(isSubStr(self.shaxGun, "rottweil72"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.8;
     }
-	else if(isSubStr(self.shaxGun, "ithaca"))
+    else if(isSubStr(self.shaxGun, "ithaca"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.71;
     }
-	else if(isSubStr(self.shaxGun, "spas"))
+    else if(isSubStr(self.shaxGun, "spas"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 2.13;
     }
-	else if(isSubStr(self.shaxGun, "hs10"))
+    else if(isSubStr(self.shaxGun, "hs10"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 1.04;
     }
-	else if(isSubStr(self.shaxGun, "hk21"))
+    else if(isSubStr(self.shaxGun, "hk21"))
     {
         self.shineShaxGunCheck = 1.2;
         self.shaxTakeaway = 0.71;
     }
-	else if(isSubStr(self.shaxGun, "rpk"))
+    else if(isSubStr(self.shaxGun, "rpk"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 1.5;
     }
-	else if(isSubStr(self.shaxGun, "m60"))
+    else if(isSubStr(self.shaxGun, "m60"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 3.2;
     }
-	else if(isSubStr(self.shaxGun, "stoner63"))
+    else if(isSubStr(self.shaxGun, "stoner63"))
     {
         self.shineShaxGunCheck = 1.2;
         self.shaxTakeaway = 0.55;
     }
-	else if(isSubStr(self.shaxGun, "dragunov"))
+    else if(isSubStr(self.shaxGun, "dragunov"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.53;
     }
-	else if(isSubStr(self.shaxGun, "wa2000"))
+    else if(isSubStr(self.shaxGun, "wa2000"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.57;
     }
-	else if(isSubStr(self.shaxGun, "l96a1"))
+    else if(isSubStr(self.shaxGun, "l96a1"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.55;
     }
-	else if(isSubStr(self.shaxGun, "psg1"))
+    else if(isSubStr(self.shaxGun, "psg1"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 0.53;
     }
-	else if(isSubStr(self.shaxGun, "asp"))
+    else if(isSubStr(self.shaxGun, "asp"))
     {
         self.shineShaxGunCheck = 0.2;
         self.shaxTakeaway = 0.4;
     }
-	else if(isSubStr(self.shaxGun, "m1911"))
+    else if(isSubStr(self.shaxGun, "m1911"))
     {
         self.shineShaxGunCheck = 0.2;
         self.shaxTakeaway = 0.7;
     }
-	else if(isSubStr(self.shaxGun, "makarov"))
+    else if(isSubStr(self.shaxGun, "makarov"))
     {
         self.shineShaxGunCheck = 0.2;
         self.shaxTakeaway = 0.7;
     }
-	else if(isSubStr(self.shaxGun, "python"))
+    else if(isSubStr(self.shaxGun, "python"))
     {
         self.shineShaxGunCheck = 1;
         self.shaxTakeaway = 1.83;
     }
-	else if(isSubStr(self.shaxGun, "cz75"))
+    else if(isSubStr(self.shaxGun, "cz75"))
     {
         self.shineShaxGunCheck = 0.2;
         self.shaxTakeaway = 0.7;
