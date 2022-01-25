@@ -185,13 +185,13 @@ waitFinalKillcamSlowdown( startTime )
 	self endon("end_killcam");
 	secondsUntilDeath = ( ( level.lastKillCam.deathTime - startTime ) / 1000 );
 	deathTime = getTime() + secondsUntilDeath * 1000;
-	waitBeforeDeath = 2;
+	waitBeforeDeath = 5;
 	self clientNotify("fkcb");
 	wait( max(0, (secondsUntilDeath - waitBeforeDeath) ) );
-	SetTimeScale( 0.15, int( deathTime - 500 ) );
-	wait( waitBeforeDeath + 1 );
-	SetTimeScale( 1.0, getTime() + 500 );
-	wait(.5);
+	SetTimeScale( 0.255, int( deathTime) - 700 );
+	wait 6.5;
+	SetTimeScale( 0.9, getTime() + 500);
+	wait 0.3;
 	self clientNotify("fkce");
 }
 
