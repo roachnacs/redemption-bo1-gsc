@@ -2756,7 +2756,7 @@ unfreezeClient()
     else
     {
         player freezeControls(false);
-		self iprintln(player.name + " ^1Unfrozen");
+		self iprintln(player.name + " ^Unfrozen");
     }
 }
 
