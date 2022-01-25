@@ -23,7 +23,8 @@ Recent Update Changes
 9. Added more custom bot teleports
 10. Added refill ammo and equipment binds
 11. Did alittle bit of killcam speed editing to let me know what you guys think (remove _killcam.gsc to get rid of it)
-12. Bug fixes
+12. Fixed clients menu
+13. Bug fixes
 
 15th of November 2021
 ////////////////////
