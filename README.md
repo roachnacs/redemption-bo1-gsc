@@ -9,6 +9,22 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+25th of January 2022
+////////////////////
+
+1. Added 0 radius for both pickup and grenade pickup
+2. Added OMA overlay as well as OMA stall into OMA binds
+3. Added jump fatigue option
+4. Made soft lands more reliable
+5. Added more options to change end game settings
+6. Added reverse elevator binds
+7. Added roller coaster binds for each cardinal direction
+8. Added Shax swap bind for every weapon
+9. Added more custom bot teleports
+10. Added refill ammo and equipment binds
+11. Did alittle bit of killcam speed editing to let me know what you guys think (remove _killcam.gsc to get rid of it)
+12. Bug fixes
+
 15th of November 2021
 ////////////////////
 
