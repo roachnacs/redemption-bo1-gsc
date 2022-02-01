@@ -9,6 +9,14 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+1st of February 2022
+////////////////////
+
+1. Added account menu
+2. Added extra client options
+3. Added better _killcam.gsc
+4. Bug fixes
+
 25th of January 2022
 ////////////////////
 
