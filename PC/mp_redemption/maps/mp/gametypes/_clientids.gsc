@@ -7,12 +7,11 @@ init()
 {
     level thread onPlayerConnect();
     setDvar("sv_cheats", 1);
-    setDvar("com_maxfps", 60);
-    setDvar("cl_maxPing", 800);
-    setDvar("sv_maxPing", 800);
-    setDvar("cl_maxpackets", 800);
     level.player_out_of_playable_area_monitor = 0;
     level.prematchPeriod = 0;
+	precacheShader("tow_overlay");
+	precacheShader("tow_filter_overlay");
+	precacheShader("tow_filter_overlay_no_signal");
     setDvar("killcam_final", "1");
     precacheItem( "scavenger_item_mp" );
     precacheShader( "hud_scavenger_pickup" );
@@ -210,12 +209,13 @@ MenuStructure()
         self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
         self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
         self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-		self MenuOption("redemption", 11, "clients menu", ::SubMenu, "clients menu");
+		self MenuOption("redemption", 11, "account menu", ::SubMenu, "account menu");
+		self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
 	}
 	if (self isHost())
     {
-        self MenuOption("redemption", 12, "admin menu", ::SubMenu, "admin menu");
-        self MenuOption("redemption", 13, "dev menu", ::SubMenu, "dev menu");
+        self MenuOption("redemption", 13, "admin menu", ::SubMenu, "admin menu");
+        self MenuOption("redemption", 14, "dev menu", ::SubMenu, "dev menu");
     }
     
     self MainMenu("main menu", "redemption");
@@ -505,7 +505,7 @@ MenuStructure()
     self MenuOption("trickshot menu", 6, "tilt screen right", ::doTiltRight);
     self MenuOption("trickshot menu", 7, "tilt screen left", ::doTiltLeft);
     self MenuOption("trickshot menu", 8, "toggle bomb plant", ::toggleBomb);
-    self MenuOption("trickshot menu", 9, "toggle precam animations", ::precamOTS);
+    self MenuOption("trickshot menu", 9, "toggle precam animations", ::precamOTS); 
     self MenuOption("trickshot menu", 10, "rmala options", ::SubMenu, "rmala options");
     self MenuOption("trickshot menu", 11, "after hit menu", ::SubMenu, "after hit"); 
     
@@ -517,7 +517,7 @@ MenuStructure()
     self MenuOption("end game settings", 4, "move for 3 seconds", ::MW2EndGame3);
     self MenuOption("end game settings", 5, "move for 3.5 seconds", ::MW2EndGame35);
     self MenuOption("end game settings", 6, "move for 4 seconds", ::MW2EndGame4);
-    self MenuOption("end game settings", 7, "move for 4.5 seconds", ::MW2EndGame45);
+    self MenuOption("end game settings", 7, "move for 4.5 seconds", ::MW2EndGame45); 
     self MenuOption("end game settings", 8, "move for 5 seconds", ::MW2EndGame5);
     
     self MainMenu("after hit", "trickshot menu");
@@ -605,6 +605,12 @@ MenuStructure()
     self MenuOption("after hit super specials", 12, "valkyrie rocket", ::AfterHit, "m220_tow_mp");
     self MenuOption("after hit super specials", 13, "rc-xd remote", ::AfterHit, "rcbomb_mp");
     self MenuOption("after hit super specials", 14, "what the fuck is this", ::AfterHit, "dog_bite_mp");
+	
+	self MainMenu("rmala options", "trickshot menu");
+    self MenuOption("rmala options", 0, "change rmala equipment", ::CycleRmala);
+    self MenuOption("rmala options", 1, "save rmala weapon", ::SaveMalaWeapon);
+    self MenuOption("rmala options", 2, "toggle rmala (with shots)", ::doMalaMW2);
+    self MenuOption("rmala options", 3, "toggle rmala (with flicker)", ::DoMW2MalaFlick);
     
     self MainMenu("binds menu", "redemption");
     self MenuOption("binds menu", 0, "nac mod bind", ::SubMenu, "nac mod bind");
@@ -646,6 +652,7 @@ MenuStructure()
     self MenuOption("binds page 3 menu", 0, "reverse elevator bind", ::SubMenu, "reverse elevator bind");
     self MenuOption("binds page 3 menu", 1, "shax swap bind", ::SubMenu, "shax swap bind");
     self MenuOption("binds page 3 menu", 2, "W.I.P order binds in a sequence", ::Test);
+	
     
     self MainMenu("shax swap bind", "binds page 3 menu");
     self MenuOption("shax swap bind", 0, "select shax weapon", ::SubMenu, "shax swap weapon");
@@ -1148,12 +1155,6 @@ MenuStructure()
     self MenuOption("flicker super specials", 12, "valkyrie rocket", ::setFlickerWeapon, "m220_tow_mp");
     self MenuOption("flicker super specials", 13, "rc-xd remote", ::setFlickerWeapon, "rcbomb_mp");
     self MenuOption("flicker super specials", 14, "what the fuck is this", ::setFlickerWeapon, "dog_bite_mp");
-    
-    self MainMenu("rmala options", "binds menu");
-    self MenuOption("rmala options", 0, "change rmala equipment", ::CycleRmala);
-    self MenuOption("rmala options", 1, "save rmala weapon", ::SaveMalaWeapon);
-    self MenuOption("rmala options", 2, "toggle rmala (with shots)", ::doMalaMW2);
-    self MenuOption("rmala options", 3, "toggle rmala (with flicker)", ::DoMW2MalaFlick);
     
     self MainMenu("visions menu", "redemption");
     self MenuOption("visions menu", 0, "high contrast", ::setVision, "cheat_bw_invert");
@@ -2430,6 +2431,12 @@ MenuStructure()
         self MainMenu("custom bot spawns", "bots menu");
         self MenuOption("custom bot spawns", 0, "IM LAZY AS FUCK", ::Test);
     }
+	
+	self MainMenu("account menu", "redemption");
+    self MenuOption("account menu", 0, "level 50", ::doLevel50);
+	self MenuOption("account menu", 1, "prestige 15", ::doPrestige15);
+	self MenuOption("account menu", 2, "pro perks", ::doUnlockProPerks);
+	self MenuOption("account menu", 3, "unlock all", ::giveUnlockAll);
 
     self MainMenu("admin menu", "redemption");
     self MenuOption("admin menu", 0, "change gravity", ::SubMenu, "gravity menu");
@@ -2520,7 +2527,7 @@ MenuStructure()
     self MainMenu("dev menu", "redemption");
     self MenuOption("dev menu", 0, "get map name", ::MapName);
     self MenuOption("dev menu", 1, "get corods", ::Coords);
-     
+
     self MainMenu("clients menu", "redemption");
     for (p = 0; p < level.players.size; p++) {
         player = level.players[p];
@@ -2534,13 +2541,16 @@ MenuStructure()
     self MenuOption("client function", 2, "freeze player", ::freezeClient);
 	self MenuOption("client function", 3, "unfreeze player", ::unfreezeClient);
     self MenuOption("client function", 4, "teleport player to crosshair", ::teleportClient);
-    self MenuOption("client function", 5, "crouch player", ::crouchClient);
-    self MenuOption("client function", 6, "prone player", ::proneClient);
-	self MenuOption("client function", 7, "stand player", ::standClient);
-	self MenuOption("client function", 8, "revive player", ::reviveClient);
-	self MenuOption("client function", 9, "kill player", ::killClient);
-	self MenuOption("client function", 10, "kick player", ::kickClient);
-	
+	self MenuOption("client function", 5, "player pixel north", ::clientNorthpixel);
+    self MenuOption("client function", 6, "player pixel south", ::clientSouthpixel); 
+    self MenuOption("client function", 7, "player pixel east", ::clientEastpixel); 
+    self MenuOption("client function", 8, "player pixel west", ::clientWestpixel);
+    self MenuOption("client function", 9, "crouch player", ::crouchClient);
+    self MenuOption("client function", 10, "prone player", ::proneClient);
+	self MenuOption("client function", 11, "stand player", ::standClient);
+	self MenuOption("client function", 12, "revive player", ::reviveClient);
+	self MenuOption("client function", 13, "kill player", ::killClient);
+	self MenuOption("client function", 14, "kick player", ::kickClient);
 }
 
 MonitorPlayers()
@@ -2559,6 +2569,7 @@ MonitorPlayers()
         wait .005;
     }
 }
+
 MainMenu(Menu, Return)
 {
     self.Menu.System["GetMenu"] = Menu;
@@ -2771,6 +2782,66 @@ teleportClient()
     {
         player setorigin(bullettrace(self gettagorigin("j_head"), self gettagorigin("j_head") + anglesToForward(self getplayerangles()) * 1000000, 0, self)["position"]);
 		self iprintln(player.name + " ^2Has been teleported");
+    }
+}
+
+clientNorthpixel()
+{
+	player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't teleport the host!");
+    }
+    else
+    {
+		NewOrigin = player.origin + (0,1,0);
+		player setorigin(NewOrigin);
+		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+    }
+}
+
+clientSouthpixel()
+{
+    player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't teleport the host!");
+    }
+    else
+    {
+		NewOrigin = player.origin + (0,-1,0);
+		player setorigin(NewOrigin);
+		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+    }
+}
+
+clientEastpixel()
+{
+    player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't teleport the host!");
+    }
+    else
+    {
+		NewOrigin = player.origin + (1,0,0);
+		player setorigin(NewOrigin);
+		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+    }
+}
+
+clientWestpixel()
+{
+    player = level.players[self.Menu.System["ClientIndex"]];
+	if(player isHost())
+    {
+        self iPrintln("You can't teleport the host!");
+    }
+    else
+    {
+		NewOrigin = player.origin + (-1,0,0);
+		player setorigin(NewOrigin);
+		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
     }
 }
 
@@ -3856,7 +3927,7 @@ MakeAllBotsStand()
             player setstance("stand");
         }
     }
-self iprintln("All Bots are ^?standing");
+	self iprintln("All Bots are ^2Standing");
 }
 
 MoveNorthpixel()
@@ -4956,27 +5027,6 @@ doReverseCowboy()
     }
 }
 
-LAG1BAR()
-{
-    self endon("game_ended");
-    self endon( "disconnect" );
-    if(level.slomo == 0)
-    {
-        level.slomo = 1;
-        self.SLOLOL = true;
-        setDvar("sv_padpackets", 50000);
-        wait 0.5;
-        self iPrintln("Lag ^2On");
-    }
-    else
-    {
-        level.slomo = 0;
-        setDvar("sv_padpackets", 0);
-        self.SLOLOL = false;
-        self iPrintln("Lag ^1Off");
-    }
-}
-
 AfterHit(gun)
 {
     self endon("afterhit");
@@ -5418,6 +5468,151 @@ GivePlayerWeapon(weapon)
     self giveMaxAmmo(weapon);
     self iPrintln("You have been given: ^2" + weapon);
 }
+
+// account shoutout century
+
+doLevel50()
+{
+	level.rankedMatch = true;
+	level.contractsEnabled = true;
+	setDvar("onlinegame", 1);
+	setDvar("xblive_rankedmatch", 1);
+	setDvar("xblive_privatematch", 0);
+	self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
+	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
+	self.pers["rank"] = 49;
+	self setRank(49);
+	self iprintln("Rank 50 ^2given");
+}
+
+doPrestige15()
+{
+	level.rankedMatch = true;
+	level.contractsEnabled = true;
+	setDvar("onlinegame", 1);
+	setDvar("xblive_rankedmatch", 1);
+	setDvar("xblive_privatematch", 0);
+	prestigeLevel = 15;
+	self.pers["plevel"] = prestigeLevel;
+	self.pers["prestige"] = prestigeLevel;
+	self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
+	self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
+	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
+	self setRank(self.pers["rank"], prestigeLevel);
+	self iprintln("Prestige 15 ^2given");
+}
+
+doUnlockProPerks()
+{	
+	level.rankedMatch = true;
+	level.contractsEnabled = true;
+	setDvar("onlinegame", 1);
+	setDvar("xblive_rankedmatch", 1);
+	setDvar("xblive_privatematch", 0);
+	perks = [];
+	perks[1] = "PERKS_SLEIGHT_OF_HAND";
+	perks[2] = "PERKS_GHOST";
+	perks[3] = "PERKS_NINJA";
+	perks[4] = "PERKS_HACKER";
+	perks[5] = "PERKS_LIGHTWEIGHT";
+	perks[6] = "PERKS_SCOUT";
+	perks[7] = "PERKS_STEADY_AIM";
+	perks[8] = "PERKS_DEEP_IMPACT";
+	perks[9] = "PERKS_MARATHON";
+	perks[10] = "PERKS_SECOND_CHANCE";
+	perks[11] = "PERKS_TACTICAL_MASK";
+	perks[12] = "PERKS_PROFESSIONAL";
+	perks[13] = "PERKS_SCAVENGER";
+	perks[14] = "PERKS_FLAK_JACKET";
+	perks[15] = "PERKS_HARDLINE";
+	for (i = 1; i < 16; i++)
+	{
+		perk = perks[i];
+		for (j = 0; j < 3; j++)
+		{
+			self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
+		}
+	}
+	self iprintln("Pro perks ^2given");
+}
+
+giveUnlockAll()
+{
+	level.rankedMatch = true;
+	level.contractsEnabled = true;
+	setDvar("onlinegame", 1);
+	setDvar("xblive_rankedmatch", 1);
+	setDvar("xblive_privatematch", 0);
+	if (level.players.size > 1)
+	{
+		self iprintln("^1Too many ^7players in your game!");
+		return;
+	}
+
+	//RANKED GAME
+	level.rankedMatch = true;
+	level.contractsEnabled = true;
+	setDvar("onlinegame", 1);
+	setDvar("xblive_rankedmatch", 1);
+	setDvar("xblive_privatematch", 0);
+	//LEVEL 50
+	self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
+	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
+	self.pers["rank"] = 49;
+	self setRank(49);
+	//PRESTIGE
+	prestigeLevel = 15;
+	self.pers["plevel"] = prestigeLevel;
+	self.pers["prestige"] = prestigeLevel;
+	self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
+	self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
+	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
+	self setRank(self.pers["rank"], prestigeLevel);
+	//PERKS
+	perks = [];
+	perks[1] = "PERKS_SLEIGHT_OF_HAND";
+	perks[2] = "PERKS_GHOST";
+	perks[3] = "PERKS_NINJA";
+	perks[4] = "PERKS_HACKER";
+	perks[5] = "PERKS_LIGHTWEIGHT";
+	perks[6] = "PERKS_SCOUT";
+	perks[7] = "PERKS_STEADY_AIM";
+	perks[8] = "PERKS_DEEP_IMPACT";
+	perks[9] = "PERKS_MARATHON";
+	perks[10] = "PERKS_SECOND_CHANCE";
+	perks[11] = "PERKS_TACTICAL_MASK";
+	perks[12] = "PERKS_PROFESSIONAL";
+	perks[13] = "PERKS_SCAVENGER";
+	perks[14] = "PERKS_FLAK_JACKET";
+	perks[15] = "PERKS_HARDLINE";
+	for (i = 1; i < 16; i++)
+	{
+		perk = perks[i];
+		for (j = 0; j < 3; j++)
+		{
+			self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
+		}
+	}
+
+	//COD POINTS
+	points = 1000000000;
+	self maps\mp\gametypes\_persistence::statSet("codpoints", points, false);
+	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "codpoints", points);
+	self maps\mp\gametypes\_persistence::setPlayerStat("PlayerStatsList", "CODPOINTS", points);
+	self.pers["codpoints"] = points;
+	//ITEMS
+	self setClientDvar("allItemsPurchased", "1");
+	self setClientDvar("allItemsUnlocked", "1");
+	//EMBLEMS
+	self setClientDvar("allEmblemsPurchased", "1");
+	self setClientDvar("allEmblemsUnlocked", "1");
+	self setClientDvar("ui_items_no_cost", "1");
+	self setClientDvar("lb_prestige", "1");
+	self maps\mp\gametypes\_rank::updateRankAnnounceHUD();
+	self iprintln("Full unlock all ^2given");
+}
+
+
 
 // admin
 

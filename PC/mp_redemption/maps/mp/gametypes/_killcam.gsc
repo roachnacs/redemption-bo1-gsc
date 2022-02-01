@@ -5,6 +5,7 @@ init()
 	precacheString(&"PLATFORM_PRESS_TO_SKIP");
 	precacheString(&"PLATFORM_PRESS_TO_RESPAWN");
 	precacheString(&"PLATFORM_PRESS_TO_COPYCAT");
+	setDvar("com_maxfps", "144");
 	setDvar("killcam_final", "1");
 	precacheShader("specialty_copycat");
 	precacheShader("white");
@@ -179,19 +180,18 @@ waitKillcamTime()
 	wait(self.killcamlength - 0.05);
 	self notify("end_killcam");
 }
-waitFinalKillcamSlowdown( startTime )
-{
+
+waitFinalKillcamSlowdown( startTime ) 
+{     
 	self endon("disconnect");
 	self endon("end_killcam");
 	secondsUntilDeath = ( ( level.lastKillCam.deathTime - startTime ) / 1000 );
 	deathTime = getTime() + secondsUntilDeath * 1000;
-	waitBeforeDeath = 5;
+	waitBeforeDeath = 2;
 	self clientNotify("fkcb");
-	wait( max(0, (secondsUntilDeath - waitBeforeDeath) ) );
-	SetTimeScale( 0.255, int( deathTime) - 700 );
-	wait 6.5;
-	SetTimeScale( 0.9, getTime() + 500);
-	wait 0.3;
+	wait(secondsUntilDeath - waitBeforeDeath);
+	wait( waitBeforeDeath + 1 );
+	wait(.05);
 	self clientNotify("fkce");
 }
 
