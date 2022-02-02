@@ -181,17 +181,19 @@ waitKillcamTime()
 	self notify("end_killcam");
 }
 
-waitFinalKillcamSlowdown( startTime ) 
-{     
+waitFinalKillcamSlowdown( startTime )
+{
 	self endon("disconnect");
 	self endon("end_killcam");
 	secondsUntilDeath = ( ( level.lastKillCam.deathTime - startTime ) / 1000 );
 	deathTime = getTime() + secondsUntilDeath * 1000;
 	waitBeforeDeath = 2;
 	self clientNotify("fkcb");
-	wait(secondsUntilDeath - waitBeforeDeath);
+	wait( max(0, (secondsUntilDeath - waitBeforeDeath) ) );
+	SetTimeScale( 0.25, int( deathTime - 600 ) );
 	wait( waitBeforeDeath + 1 );
-	wait(.05);
+	SetTimeScale( 1.0, getTime() + 500 );
+	wait(.5);
 	self clientNotify("fkce");
 }
 
