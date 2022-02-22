@@ -9,6 +9,26 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+22nd of February 2022
+////////////////////
+1. Added perks menu
+2. Added  unset all perks
+3. Added set each perk
+4. Changed UFO and added more binds to it
+5. Added quick stuff bind, prone, ADS and melee for a canswap, max ammo and a carepackage
+6. Split shax into 2 groups, killcam shax is the shax from before, but I added...... (see below)
+7. Added shax swap bind with static screen
+8. Split spawn carepackage stall into 2, the one from before is spawn carepackage in midair and then I added spawn carepackage which will fall
+9. Added option to change the speed of the carepackage capture for both teams
+10. Added option to change the strength radius of the forge mod
+11. Added Carepackage Capture bind with a selectable streak
+12. Added Fake Carepackage Nac bind with a selectable streak
+13. Added Invisible Weapon bind
+14. Change the alpha of the OMA bars to be more realistic
+15. Fixed unfair aimbot 
+16. Added more options to killcam length
+17. Better soft land :slight_smile:
+
 1st of February 2022
 ////////////////////
 
