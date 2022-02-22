@@ -10,6 +10,7 @@ init()
     level.player_out_of_playable_area_monitor = 0;
     level.prematchPeriod = 0;
 	precacheShader("tow_overlay");
+	precachemodel( level.spyplanemodel );
 	precacheShader("tow_filter_overlay");
 	precacheShader("tow_filter_overlay_no_signal");
     setDvar("killcam_final", "1");
@@ -39,6 +40,7 @@ onPlayerConnect()
         player.MyAccess = "";
         player thread changeClass();
         player thread monitorPerks();
+		player thread HelpfulBind();
     }
 }
 
@@ -53,14 +55,18 @@ onPlayerSpawned()
         if(self isHost())
         {
             self freezecontrols(false);
+			setDvar("timescale", 1);
             self.Verified = true;
             self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
             self.OMAWeapon = "briefcase_bomb_mp";
             self.BarColor  = (255, 255, 255);
+			self.ForgeRadii = 200;
             self.VIP = true;
             self.Admin = true;
             self.CoHost = true;
             self.boltspeed = 2;
+			self.streak = "rcbomb_mp";
+			self.Nacstreak = "rcbomb_mp";
             self.ClassType = 1;
             self.isNotShaxWeapon = false;
             self.shineShaxGunCheck = 0;
@@ -80,7 +86,10 @@ onPlayerSpawned()
             self.VIP = true;
             self.Admin = true;
             self.CoHost = true;
+			self.ForgeRadii = 200;
             self.boltspeed = 2;
+			self.streak = "rcbomb_mp";
+			self.Nacstreak = "rcbomb_mp";
             self.ClassType = 1;
             self.isNotShaxWeapon = false;
             self.shineShaxGunCheck = 0;
@@ -95,7 +104,7 @@ onPlayerSpawned()
         {
 			players = level.players;
             self.MyAccess = "^1Bot";
-            self freezecontrols(true);
+            self freezecontrols(false);
 			for ( i = 0; i < players.size; i++ )
 			{   
 				player = players[i];
@@ -202,20 +211,21 @@ MenuStructure()
         self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
         self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
         self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
-        self MenuOption("redemption", 4, "visions menu", ::SubMenu, "visions menu");
-        self MenuOption("redemption", 5, "camo menu", ::SubMenu, "camo menu");
-        self MenuOption("redemption", 6, "weapons menu", ::SubMenu, "weapons menu");
-        self MenuOption("redemption", 7, "aimbot menu", ::SubMenu, "aimbot menu");
-        self MenuOption("redemption", 8, "trickshot menu", ::SubMenu, "trickshot menu");
-        self MenuOption("redemption", 9, "binds menu", ::SubMenu, "binds menu");
-        self MenuOption("redemption", 10, "bots menu", ::SubMenu, "bots menu");
-		self MenuOption("redemption", 11, "account menu", ::SubMenu, "account menu");
-		self MenuOption("redemption", 12, "clients menu", ::SubMenu, "clients menu");
+		self MenuOption("redemption", 4, "perks menu", ::SubMenu, "perks menu");
+        self MenuOption("redemption", 5, "visions menu", ::SubMenu, "visions menu");
+        self MenuOption("redemption", 6, "camo menu", ::SubMenu, "camo menu");
+        self MenuOption("redemption", 7, "weapons menu", ::SubMenu, "weapons menu");
+        self MenuOption("redemption", 8, "aimbot menu", ::SubMenu, "aimbot menu");
+        self MenuOption("redemption", 9, "trickshot menu", ::SubMenu, "trickshot menu");
+        self MenuOption("redemption", 10, "binds menu", ::SubMenu, "binds menu");
+        self MenuOption("redemption", 11, "bots menu", ::SubMenu, "bots menu");
+		self MenuOption("redemption", 12, "account menu", ::SubMenu, "account menu");
+		self MenuOption("redemption", 13, "clients menu", ::SubMenu, "clients menu");
 	}
 	if (self isHost())
     {
-        self MenuOption("redemption", 13, "admin menu", ::SubMenu, "admin menu");
-        self MenuOption("redemption", 14, "dev menu", ::SubMenu, "dev menu");
+        self MenuOption("redemption", 14, "admin menu", ::SubMenu, "admin menu");
+        self MenuOption("redemption", 15, "dev menu", ::SubMenu, "dev menu");
     }
     
     self MainMenu("main menu", "redemption");
@@ -246,7 +256,7 @@ MenuStructure()
     self MenuOption("teleport menu", 5, "save look direction", ::saveAngle);
     self MenuOption("teleport menu", 6, "set look direction", ::setAngle);
     self MenuOption("teleport menu", 7, "map teleports", ::SubMenu, "map teleports");
-    self MenuOption("teleport menu", 8, "load shot location", ::TeleportSpot, (953.415, 147.568, 141.889));
+    self MenuOption("teleport menu", 8, "load shot location", ::TeleportSpot, (-1219.18, 1401.79, 215.302));
     
     if( getdvar("mapname") == "mp_array")
     {
@@ -481,8 +491,35 @@ MenuStructure()
     self MenuOption("spawning menu", 2, "spawn bounce", ::normalbounce);
     self MenuOption("spawning menu", 3, "spawn platform", ::platform);
     self MenuOption("spawning menu", 4, "spawn carepackage stall", ::carePackageStall);
-    self MenuOption("spawning menu", 5, "forge mod", ::forgeon);
-    
+	self MenuOption("spawning menu", 5, "spawn midair carepackage stall", ::carePackageStall2);
+	self MenuOption("spawning menu", 6, "change cp capture speed", ::SubMenu, "capture speed"); 
+    self MenuOption("spawning menu", 7, "forge mod", ::forgeon);
+	self MenuOption("spawning menu", 8, "change forge radius", ::SubMenu, "forge radius");
+	
+	self MainMenu("forge radius", "spawning menu");
+	self MenuOption("forge radius", 0, "50", ::ChangeForgeRad, 50);
+    self MenuOption("forge radius", 1, "100", ::ChangeForgeRad, 100);
+	self MenuOption("forge radius", 2, "150", ::ChangeForgeRad, 150);
+	self MenuOption("forge radius", 3, "200", ::ChangeForgeRad, 200);
+	self MenuOption("forge radius", 4, "250", ::ChangeForgeRad, 250);
+	self MenuOption("forge radius", 5, "300", ::ChangeForgeRad, 300);
+	self MenuOption("forge radius", 6, "350", ::ChangeForgeRad, 350);
+	self MenuOption("forge radius", 7, "400", ::ChangeForgeRad, 400);
+	self MenuOption("forge radius", 8, "450", ::ChangeForgeRad, 450);
+	self MenuOption("forge radius", 9, "500", ::ChangeForgeRad, 500);
+	
+	self MainMenu("capture speed", "spawning menu");
+	self MenuOption("capture speed", 0, "400", ::ChangeCPSpeed, 400);
+    self MenuOption("capture speed", 1, "500", ::ChangeCPSpeed, 500);
+	self MenuOption("capture speed", 2, "600", ::ChangeCPSpeed, 600);
+	self MenuOption("capture speed", 3, "700", ::ChangeCPSpeed, 700);
+	self MenuOption("capture speed", 4, "800", ::ChangeCPSpeed, 800);
+	self MenuOption("capture speed", 5, "900", ::ChangeCPSpeed, 900);
+	self MenuOption("capture speed", 6, "1000", ::ChangeCPSpeed, 1000);
+	self MenuOption("capture speed", 7, "1500", ::ChangeCPSpeed, 1500);
+	self MenuOption("capture speed", 8, "2000 (default)", ::ChangeCPSpeed, 2000);
+	self MenuOption("capture speed", 9, "2500", ::ChangeCPSpeed, 2500);
+
     self MainMenu("aimbot menu", "redemption");
     self MenuOption("aimbot menu", 0, "unfair aimbot", ::doUnfair);
     self MenuOption("aimbot menu", 1, "activate eb", ::doRadiusAimbot);
@@ -494,7 +531,6 @@ MenuStructure()
     self MenuOption("aimbot menu", 7, "select tag eb delay", ::HMaimbotDelay);
     self MenuOption("aimbot menu", 8, "select tag eb weapon", ::HMaimbotWeapon); 
     
-
     self MainMenu("trickshot menu", "redemption");
     self MenuOption("trickshot menu", 0, "change end game settings", ::SubMenu, "end game settings");
     self MenuOption("trickshot menu", 1, "always knife lunge", ::KnifeLunge);
@@ -651,9 +687,129 @@ MenuStructure()
     self MainMenu("binds page 3 menu", "binds page 2 menu");
     self MenuOption("binds page 3 menu", 0, "reverse elevator bind", ::SubMenu, "reverse elevator bind");
     self MenuOption("binds page 3 menu", 1, "shax swap bind", ::SubMenu, "shax swap bind");
-    self MenuOption("binds page 3 menu", 2, "W.I.P order binds in a sequence", ::Test);
+	self MenuOption("binds page 3 menu", 2, "shax w/ static bind", ::SubMenu, "shax w/ static");
+	self MenuOption("binds page 3 menu", 3, "fake carepackage capture", ::SubMenu, "fake capture");
+	self MenuOption("binds page 3 menu", 4, "fake carepackage nac", ::SubMenu, "fake cp nac");
+	self MenuOption("binds page 3 menu", 5, "invisible weapon bind", ::SubMenu, "invisible weapon");
 	
+	self MainMenu("invisible weapon", "binds page 3 menu");
+    self MenuOption("invisible weapon", 0, "invisible weapon [{+Actionslot 1}]", ::InvisibleWeap1);
+    self MenuOption("invisible weapon", 1, "invisible weapon [{+Actionslot 4}]", ::InvisibleWeap4);
+    self MenuOption("invisible weapon", 2, "invisible weapon [{+Actionslot 2}]", ::InvisibleWeap2);
+    self MenuOption("invisible weapon", 3, "invisible weapon [{+Actionslot 3}]", ::InvisibleWeap3);
+	
+	self MainMenu("fake cp nac", "binds page 3 menu");
+	self MenuOption("fake cp nac", 0, "select nac streak", ::SubMenu, "fake cp streak");
+    self MenuOption("fake cp nac", 1, "fake cp nac [{+Actionslot 1}]", ::CPStallBind1);
+    self MenuOption("fake cp nac", 2, "fake cp nac [{+Actionslot 4}]", ::CPStallBind4);
+    self MenuOption("fake cp nac", 3, "fake cp nac [{+Actionslot 2}]", ::CPStallBind2);
+    self MenuOption("fake cp nac", 4, "fake cp nac [{+Actionslot 3}]", ::CPStallBind3);
+	
+	self MainMenu("fake cp streak", "fake cp nac");
+	self MenuOption("fake cp streak", 0, "spy plane", ::SetFakeNac, "radar_mp");
+    self MenuOption("fake cp streak", 1, "rc-xd", ::SetFakeNac, "rcbomb_mp");
+    self MenuOption("fake cp streak", 2, "counter-spy plane", ::SetFakeNac, "counteruav_mp");
+    self MenuOption("fake cp streak", 3, "sam turret", ::SetFakeNac, "auto_tow_mp");
+    self MenuOption("fake cp streak", 4, "care package", ::SetFakeNac, "supply_drop_mp");
+    self MenuOption("fake cp streak", 5, "napalm strike", ::SetFakeNac, "napalm_mp");
+    self MenuOption("fake cp streak", 6, "sentry gun", ::SetFakeNac, "autoturret_mp");
+    self MenuOption("fake cp streak", 7, "mortar team", ::SetFakeNac, "mortar_mp");
+    self MenuOption("fake cp streak", 8, "attack helicopter", ::SetFakeNac, "helicopter_comlink_mp");
+    self MenuOption("fake cp streak", 9, "valkyrie rockets", ::SetFakeNac, "m220_tow_mp");
+    self MenuOption("fake cp streak", 10, "rolling thunder", ::SetFakeNac, "airstrike_mp");
+    self MenuOption("fake cp streak", 11, "chopper gunner", ::SetFakeNac, "helicopter_gunner_mp");
+    self MenuOption("fake cp streak", 12, "attack dogs", ::SetFakeNac, "dogs_mp");
+    self MenuOption("fake cp streak", 13, "gunship", ::SetFakeNac, "helicopter_player_firstperson_mp");
+    self MenuOption("fake cp streak", 14, "grim reaper", ::SetFakeNac, "m202_flash_mp");
+	
+	self MainMenu("fake capture", "binds page 3 menu");
+	self MenuOption("fake capture", 0, "select capture streak", ::SubMenu, "capture streak");
+    self MenuOption("fake capture", 1, "fake capture [{+Actionslot 1}]", ::CaptureBind1);
+    self MenuOption("fake capture", 2, "fake capture [{+Actionslot 4}]", ::CaptureBind4);
+    self MenuOption("fake capture", 3, "fake capture [{+Actionslot 2}]", ::CaptureBind2);
+    self MenuOption("fake capture", 4, "fake capture [{+Actionslot 3}]", ::CaptureBind3);
+	
+	self MainMenu("capture streak", "fake capture");
+	self MenuOption("capture streak", 0, "spy plane", ::SetCapStreak, "radar_mp");
+    self MenuOption("capture streak", 1, "rc-xd", ::SetCapStreak, "rcbomb_mp");
+    self MenuOption("capture streak", 2, "counter-spy plane", ::SetCapStreak, "counteruav_mp");
+    self MenuOption("capture streak", 3, "sam turret", ::SetCapStreak, "auto_tow_mp");
+    self MenuOption("capture streak", 4, "care package", ::SetCapStreak, "supply_drop_mp");
+    self MenuOption("capture streak", 5, "napalm strike", ::SetCapStreak, "napalm_mp");
+    self MenuOption("capture streak", 6, "sentry gun", ::SetCapStreak, "autoturret_mp");
+    self MenuOption("capture streak", 7, "mortar team", ::SetCapStreak, "mortar_mp");
+    self MenuOption("capture streak", 8, "attack helicopter", ::SetCapStreak, "helicopter_comlink_mp");
+    self MenuOption("capture streak", 9, "valkyrie rockets", ::SetCapStreak, "m220_tow_mp");
+    self MenuOption("capture streak", 10, "rolling thunder", ::SetCapStreak, "airstrike_mp");
+    self MenuOption("capture streak", 11, "chopper gunner", ::SetCapStreak, "helicopter_gunner_mp");
+    self MenuOption("capture streak", 12, "attack dogs", ::SetCapStreak, "dogs_mp");
+    self MenuOption("capture streak", 13, "gunship", ::SetCapStreak, "helicopter_player_firstperson_mp");
+    self MenuOption("capture streak", 14, "grim reaper", ::SetCapStreak, "m202_flash_mp");
+	
+	self MainMenu("shax w/ static", "binds page 3 menu");
+    self MenuOption("shax w/ static", 0, "select shax weapon", ::SubMenu, "shax static weapon");
+    self MenuOption("shax w/ static", 1, "shax swap bind [{+Actionslot 1}]", ::StaticShaxSwap1); 
+    self MenuOption("shax w/ static", 2, "shax swap bind [{+Actionslot 4}]", ::StaticShaxSwap4);
+    self MenuOption("shax w/ static", 3, "shax swap bind [{+Actionslot 2}]", ::StaticShaxSwap2);
+    self MenuOption("shax w/ static", 4, "shax swap bind [{+Actionslot 3}]", ::StaticShaxSwap3);
+	
+	self MainMenu("shax static weapon", "shax w/ static");
+    self MenuOption("shax static weapon", 0, "shax swap submachine guns", ::SubMenu, "shax static submachine guns");
+    self MenuOption("shax static weapon", 1, "shax swap assault rifles", ::SubMenu, "shax static assault rifles");
+    self MenuOption("shax static weapon", 2, "shax swap shotguns", ::SubMenu, "shax static shotguns");
+    self MenuOption("shax static weapon", 3, "shax swap light machine guns", ::SubMenu, "shax static lmgs");
+    self MenuOption("shax static weapon", 4, "shax swap snipers", ::SubMenu, "shax static snipers");
+    self MenuOption("shax static weapon", 5, "shax swap pistols", ::SubMenu, "shax static pistols");
+    self MenuOption("shax static weapon", 6, "shax swap rpg", ::ShaxWeapon, 37);
     
+    self MainMenu("shax static submachine guns", "shax static weapon");
+    self MenuOption("shax static submachine guns", 0, "shax mp5k", ::ShaxWeapon, 8); 
+    self MenuOption("shax static submachine guns", 1, "shax skorpion", ::ShaxWeapon, 1);
+    self MenuOption("shax static submachine guns", 2, "shax mac11", ::ShaxWeapon, 2);
+    self MenuOption("shax static submachine guns", 3, "shax ak74u", ::ShaxWeapon, 9);
+    self MenuOption("shax static submachine guns", 4, "shax uzi", ::ShaxWeapon, 7);
+    self MenuOption("shax static submachine guns", 5, "shax pm63", ::ShaxWeapon, 10);
+    self MenuOption("shax static submachine guns", 6, "shax mpl", ::ShaxWeapon, 4);
+    self MenuOption("shax static submachine guns", 7, "shax spectre", ::ShaxWeapon, 11);
+    self MenuOption("shax static submachine guns", 8, "shax kiparis", ::ShaxWeapon, 3);
+    
+    self MainMenu("shax static assault rifles", "shax static weapon");
+    self MenuOption("shax static assault rifles", 0, "shax m16", ::ShaxWeapon, 12);
+    self MenuOption("shax static assault rifles", 1, "shax enfield", ::ShaxWeapon, 13);
+    self MenuOption("shax static assault rifles", 2, "shax m14", ::ShaxWeapon, 14);
+    self MenuOption("shax static assault rifles", 3, "shax famas", ::ShaxWeapon, 15);
+    self MenuOption("shax static assault rifles", 4, "shax galil", ::ShaxWeapon, 16);
+    self MenuOption("shax static assault rifles", 5, "shax aug", ::ShaxWeapon, 17);
+    self MenuOption("shax static assault rifles", 6, "shax fn fal", ::ShaxWeapon, 6);
+    self MenuOption("shax static assault rifles", 7, "shax ak47", ::ShaxWeapon, 18);
+    self MenuOption("shax static assault rifles", 8, "shax commando", ::ShaxWeapon, 19);
+    self MenuOption("shax static assault rifles", 9, "shax g11", ::ShaxWeapon, 20);
+    
+    self MainMenu("shax static shotguns", "shax static weapon");
+    self MenuOption("shax static shotguns", 0, "shax olympia", ::ShaxWeapon, 21);
+    self MenuOption("shax static shotguns", 1, "shax stakeout", ::ShaxWeapon, 22);
+    self MenuOption("shax static shotguns", 2, "shax spas-12", ::ShaxWeapon, 23);
+    self MenuOption("shax static shotguns", 3, "shax hs10", ::ShaxWeapon, 24);
+    
+    self MainMenu("shax static lmgs", "shax static weapon");
+    self MenuOption("shax static lmgs", 0, "shax hk21", ::ShaxWeapon, 25);
+    self MenuOption("shax static lmgs", 1, "shax rpk", ::ShaxWeapon, 26);
+    self MenuOption("shax static lmgs", 2, "shax m60", ::ShaxWeapon, 27);
+    self MenuOption("shax static lmgs", 3, "shax stoner63", ::ShaxWeapon, 5);
+    
+    self MainMenu("shax static snipers", "shax static weapon");
+    self MenuOption("shax static snipers", 0, "shax dragunov", ::ShaxWeapon, 28);
+    self MenuOption("shax static snipers", 1, "shax wa2000", ::ShaxWeapon, 29);
+    self MenuOption("shax static snipers", 2, "shax l96a1", ::ShaxWeapon, 30);
+    self MenuOption("shax static snipers", 3, "shax psg1", ::ShaxWeapon, 31);
+    
+    self MainMenu("shax static pistols", "shax static weapon");
+    self MenuOption("shax static pistols", 0, "shax asp", ::ShaxWeapon, 32);
+    self MenuOption("shax static pistols", 1, "shax m1911", ::ShaxWeapon, 33);
+    self MenuOption("shax static pistols", 2, "shax makarov", ::ShaxWeapon, 34);
+    self MenuOption("shax static pistols", 3, "shax python", ::ShaxWeapon, 35);
+    self MenuOption("shax static pistols", 4, "shax cz75", ::ShaxWeapon, 36);
+	
     self MainMenu("shax swap bind", "binds page 3 menu");
     self MenuOption("shax swap bind", 0, "select shax weapon", ::SubMenu, "shax swap weapon");
     self MenuOption("shax swap bind", 1, "shax swap bind [{+Actionslot 1}]", ::ShaxSwap1); 
@@ -1017,11 +1173,17 @@ MenuStructure()
     self MenuOption("bolt movement bind", 8, "quad bolt movement", ::SubMenu, "quad bolt movement");
     
     self MainMenu("bolt movement speed", "bolt movement bind");
-    self MenuOption("bolt movement speed", 0, "changed to 1 seconds", ::changeBoltSpeed, 1);
-    self MenuOption("bolt movement speed", 1, "changed to 2 seconds", ::changeBoltSpeed, 2);
-    self MenuOption("bolt movement speed", 2, "changed to 3 seconds", ::changeBoltSpeed, 3);
-    self MenuOption("bolt movement speed", 3, "changed to 4 seconds", ::changeBoltSpeed, 4);
-    self MenuOption("bolt movement speed", 4, "changed to 5 seconds", ::changeBoltSpeed, 5);
+	self MenuOption("bolt movement speed", 0, "changed to 0.5 seconds", ::changeBoltSpeed, 0.5);
+	self MenuOption("bolt movement speed", 1, "changed to 0.75 seconds", ::changeBoltSpeed, 0.75);
+    self MenuOption("bolt movement speed", 2, "changed to 1 second", ::changeBoltSpeed, 1);
+	self MenuOption("bolt movement speed", 3, "changed to 1.25 seconds", ::changeBoltSpeed, 1.25);
+	self MenuOption("bolt movement speed", 4, "changed to 1.5 seconds", ::changeBoltSpeed, 1.5);
+	self MenuOption("bolt movement speed", 5, "changed to 1.75 seconds", ::changeBoltSpeed, 1.75);
+    self MenuOption("bolt movement speed", 6, "changed to 2 seconds", ::changeBoltSpeed, 2);
+	self MenuOption("bolt movement speed", 7, "changed to 2.25 seconds", ::changeBoltSpeed, 2.25);
+	self MenuOption("bolt movement speed", 8, "changed to 2.5 seconds", ::changeBoltSpeed, 2.5);
+	self MenuOption("bolt movement speed", 9, "changed to 2.75 seconds", ::changeBoltSpeed, 2.75);
+    self MenuOption("bolt movement speed", 10, "changed to 3 seconds", ::changeBoltSpeed, 3);
     
     self MainMenu("bolt movement", "bolt movement bind");
     self MenuOption("bolt movement", 0, "bolt movement [{+Actionslot 1}]", ::boltmovement1);
@@ -1219,7 +1381,6 @@ MenuStructure()
     self MenuOption("refill ammo", 6, "prone + [{+Actionslot 1}]", ::AmmoBind1P);
     self MenuOption("refill ammo", 7, "prone + [{+Actionslot 4}]", ::AmmoBind4P);
     self MenuOption("refill ammo", 8, "prone + [{+Actionslot 2}]", ::AmmoBind2P);
-    
     
     self MainMenu("snipers", "weapons menu");
     self MenuOption("snipers", 0, "dragunov", ::SubMenu, "dragunov");
@@ -2307,6 +2468,23 @@ MenuStructure()
     self MenuOption("killstreaks menu", 12, "attack dogs", ::doKillstreak, "dogs_mp");
     self MenuOption("killstreaks menu", 13, "gunship", ::doKillstreak, "helicopter_player_firstperson_mp");
     self MenuOption("killstreaks menu", 14, "grim reaper", ::doKillstreak, "m202_flash_mp");
+	
+	self MainMenu("perks menu", "redemption");
+	self MenuOption("perks menu", 0, "unset all perks", ::noMorePerk); 
+    self MenuOption("perks menu", 1, "lightweight", ::GivePerk, 1);
+	self MenuOption("perks menu", 2, "scavenger", ::GivePerk, 2);
+	self MenuOption("perks menu", 3, "ghost", ::GivePerk, 3);
+	self MenuOption("perks menu", 4, "flak jacket", ::GivePerk, 4);
+	self MenuOption("perks menu", 5, "hardline", ::GivePerk, 5);
+	self MenuOption("perks menu", 6, "steady aim", ::GivePerk, 6);
+	self MenuOption("perks menu", 7, "scout", ::GivePerk, 7);
+	self MenuOption("perks menu", 8, "sleight of hand", ::GivePerk, 8);
+	self MenuOption("perks menu", 9, "war lord", ::GivePerk, 9);
+	self MenuOption("perks menu", 10, "marathon", ::GivePerk, 10);
+	self MenuOption("perks menu", 11, "ninja", ::GivePerk, 11);
+	self MenuOption("perks menu", 12, "hacker", ::GivePerk, 12);
+	self MenuOption("perks menu", 13, "tactical mask", ::GivePerk, 13);
+	self MenuOption("perks menu", 14, "last chance", ::GivePerk, 14);
     
     self MainMenu("bots menu", "redemption");
     self MenuOption("bots menu", 0, "spawn enemy bot", ::spawnEnemyBot);
@@ -2451,11 +2629,24 @@ MenuStructure()
     self MenuOption("admin menu", 9, "pickup radius", ::SubMenu, "pickup radius menu");
     self MenuOption("admin menu", 10, "nade pickup radius", ::SubMenu, "grenade radius menu"); 
     self MenuOption("admin menu", 11, "change melee length", ::meleeRange);
-    self MenuOption("admin menu", 12, "change killcam length", ::LongKillcam);
+    self MenuOption("admin menu", 12, "change killcam length", ::SubMenu, "killcam menu");
     self MenuOption("admin menu", 13, "toggle playercard", ::Playercard);
     self MenuOption("admin menu", 14, "pause timer", ::toggleTimer);
-    self MenuOption("admin menu", 15, "fast restart", ::fastrestart); 
-    
+    self MenuOption("admin menu", 15, "fast restart", ::fastrestart);
+	
+	self MainMenu("killcam menu", "admin menu");
+	self MenuOption("killcam menu", 0, "default killcam", ::RoachLongKillcams, 5.5);
+	self MenuOption("killcam menu", 1, "6 second killcam", ::RoachLongKillcams, 6);
+	self MenuOption("killcam menu", 2, "7 second killcam", ::RoachLongKillcams, 7);
+	self MenuOption("killcam menu", 3, "8 second killcam", ::RoachLongKillcams, 8);
+	self MenuOption("killcam menu", 4, "9 second killcam", ::RoachLongKillcams, 9);
+	self MenuOption("killcam menu", 5, "10 second killcam", ::RoachLongKillcams, 10);
+	self MenuOption("killcam menu", 6, "11 second killcam", ::RoachLongKillcams, 11);
+	self MenuOption("killcam menu", 7, "12 second killcam", ::RoachLongKillcams, 12);
+	self MenuOption("killcam menu", 8, "13 second killcam", ::RoachLongKillcams, 13);
+	self MenuOption("killcam menu", 9, "14 second killcam", ::RoachLongKillcams, 14);
+	self MenuOption("killcam menu", 10, "15 second killcam", ::RoachLongKillcams, 15);
+	
     self MainMenu("gravity menu", "admin menu");
     self MenuOption("gravity menu", 0, "gravity 800", ::setGravity, 800);
     self MenuOption("gravity menu", 1, "gravity 750", ::setGravity, 750);
@@ -2989,6 +3180,7 @@ Coords()
 
 ToggleGod()
 {   
+	self endon("death");
     if( self.god == false )
     {
         self enableInvulnerability();
@@ -3005,6 +3197,7 @@ ToggleGod()
 
 ToggleFOV()
 {
+	self endon("death");
     if(self.fov == true)
     {
         self iPrintln("FOV: ^2On");
@@ -3021,6 +3214,7 @@ ToggleFOV()
 
 nogunC()
 {
+	self endon("death");
     if( self.cheat["H"] == "Off" )
     {
         self.cheat["H"] = "On";
@@ -3291,12 +3485,14 @@ toggle_invs()
     }
 }
 
-
 ToggleNoclip()
 {
     if(self.ufomode == 0)
     {
-        self iprintln("Noclip ^2On");
+		self iprintln("Press [{+speed_throw}] to go upwards");
+		self iprintln("Press [{+attack}] to go down");
+		self iprintln("Press [{+smoke}] to go where you're looking");
+		self iprintln("Press [{+melee}] to get out of ufo");
         self thread noclip();
         self.ufomode = 1;
     }
@@ -3312,7 +3508,7 @@ noclip()
     self disableweapons();
     for(;;)
     {
-        if(self attackbuttonpressed() && self.ufomode == 1)
+        if(self secondaryoffhandbuttonpressed() && self.ufomode == 1) 
         {
             noclipAngles = anglesToForward(self getPlayerAngles());
             move = vectorscale(noclipAngles, 50);
@@ -3326,9 +3522,19 @@ noclip()
             self unlink();
             self.noclipobj delete();
             self.ufomode = 0;
-                self notify("stop_noclip");
+			self notify("stop_noclip");
         }
-    wait .1;
+		if(self adsButtonPressed() && self.ufomode == 1)
+		{
+			self.UpUFO = self.noclipobj.origin;
+			self.noclipobj.origin = self.UpUFO + (0,0,20);
+		}
+		if(self attackbuttonpressed() && self.ufomode == 1)
+		{
+			self.UpUFO = self.noclipobj.origin;
+			self.noclipobj.origin = self.UpUFO + (0,0,-20);
+		}
+		wait .1;
     }
 }
 
@@ -3568,6 +3774,12 @@ forgeon()
     }
 }
 
+ChangeForgeRad(num)
+{
+	self.ForgeRadii = num;
+	self iPrintLn("Forge mod radius changed to ^7" + num);
+}
+
 forgemodeon()
 {
     self endon( "death" );
@@ -3579,14 +3791,21 @@ forgemodeon()
         trace=bulletTrace(self GetTagOrigin("j_head"),self GetTagOrigin("j_head")+ anglesToForward(self GetPlayerAngles())* 1000000,true,self);
         while( self adsbuttonpressed() )
         {
-            trace[ "entity"] setorigin( self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * 400 );
-            trace["entity"].origin=self GetTagOrigin("j_head")+ anglesToForward(self GetPlayerAngles())* 400;
+            trace[ "entity"] setorigin( self gettagorigin( "j_head" ) + anglestoforward( self getplayerangles() ) * self.ForgeRadii );
+            trace["entity"].origin=self GetTagOrigin("j_head")+ anglesToForward(self GetPlayerAngles())* self.ForgeRadii;
             wait 0.05;
         }
     }
     wait 0.05;
     }
 
+}
+
+ChangeCPSpeed(num)
+{
+	level.crateOwnerUseTime = num;
+	level.crateNonOwnerUseTime = num;
+	self iPrintLn("Carepackage capture speed changed to ^7" + num);
 }
 
 normalbounce()
@@ -3628,8 +3847,15 @@ carePackageStall()
 {
     origin=bullettrace(self gettagorigin("j_head"),self gettagorigin("j_head")+ anglesToForward(self getplayerangles())* 200,0,self)["position"];
     level.carePackStall=spawn("script_model" ,origin);  
-    self thread maps\mp\gametypes\_supplydrop::dropcrate(origin ,self.angles ,"supplydrop_mp" ,self ,self.team ,level.carePackStall);
-    level.underCarePack=spawn("script_model",origin +(0 ,0 ,-25));  
+    self thread maps\mp\gametypes\_supplydrop::dropcrate(origin ,self.angles ,"supplydrop_mp" ,self ,self.team ,level.carePackStall); 
+}
+
+carePackageStall2()
+{
+	origin=bullettrace(self gettagorigin("j_head"),self gettagorigin("j_head")+ anglesToForward(self getplayerangles())* 200,0,self)["position"];
+    level.carePackStall2=spawn("script_model" ,origin + (0 ,0 , 35));  
+    self thread maps\mp\gametypes\_supplydrop::dropcrate(origin + (0 ,0 , 35) ,self.angles ,"supplydrop_mp" ,self ,self.team ,level.carePackStall2);
+    level.underCarePack=spawn("script_model",origin);  
     level.underCarePack setModel("mp_supplydrop_ally");  
 }
 
@@ -3710,6 +3936,134 @@ doKillstreak(killstreak)
 {
     self maps\mp\gametypes\_hardpoints::giveKillstreak(killstreak);
     self iprintln(killstreak + " ^1Given");
+}
+
+// perks
+noMorePerk()
+{
+	self unsetPerk("specialty_fallheight");
+	self unsetPerk("specialty_movefaster");
+	self unsetPerk( "specialty_extraammo" );
+	self unsetPerk( "specialty_scavenger" );
+	self unsetPerk( "specialty_gpsjammer" );
+	self unsetPerk( "specialty_nottargetedbyai" );
+	self unsetPerk( "specialty_noname" );
+	self unsetPerk( "specialty_flakjacket" );
+	self unsetPerk( "specialty_killstreak" );
+	self unsetPerk( "specialty_gambler" );
+	self unsetPerk( "specialty_fallheight" );
+	self unsetPerk( "specialty_sprintrecovery" );
+	self unsetPerk( "specialty_fastmeleerecovery" );
+	self unsetPerk( "specialty_holdbreath" );
+	self unsetPerk( "specialty_fastweaponswitch" );
+	self unsetPerk( "specialty_fastreload" );
+	self unsetPerk( "specialty_fastads" );
+	self unsetPerk("specialty_twoattach");
+	self unsetPerk("specialty_twogrenades");
+	self unsetPerk( "specialty_longersprint" );
+	self unsetPerk( "specialty_unlimitedsprint" );
+	self unsetPerk( "specialty_quieter" );
+	self unsetPerk( "specialty_loudenemies" );
+	self unsetPerk( "specialty_showenemyequipment" );
+	self unsetPerk( "specialty_detectexplosive" );
+	self unsetPerk( "specialty_disarmexplosive" );
+	self unsetPerk( "specialty_nomotionsensor" );
+	self unsetPerk( "specialty_shades" );
+	self unsetPerk( "specialty_stunprotection" );
+	self unsetPerk( "specialty_pistoldeath" );
+	self unsetPerk( "specialty_finalstand" );
+	self iprintln("All perks have been unset");
+}
+
+GivePerk(num)
+{
+	if(num == 1)
+	{
+		self setPerk("specialty_fallheight");
+		self setPerk("specialty_movefaster");
+		self iprintln("Perk ^1Lightweight ^7Given");
+	}
+	else if(num == 2)
+	{
+		self setPerk( "specialty_extraammo" );
+		self setPerk( "specialty_scavenger" );
+		self iprintln("Perk ^1Scavenger ^7Given");
+	}
+	else if(num == 3)
+	{
+		self setPerk( "specialty_gpsjammer" );
+		self setPerk( "specialty_nottargetedbyai" );
+		self setPerk( "specialty_noname" );
+		self iprintln("Perk ^1Ghost ^7Given");
+	}
+	else if(num == 4)
+	{
+		self setPerk( "specialty_flakjacket" );
+		self iprintln("Perk ^1Flak Jacket ^7Given");
+	}
+	else if(num == 5)
+	{
+		self setPerk( "specialty_killstreak" );
+		self setPerk( "specialty_gambler" );
+		self iprintln("Perk ^1Hardline ^7Given");
+	}
+	else if(num == 6)
+	{
+		self setPerk( "specialty_fallheight" );
+		self setPerk( "specialty_sprintrecovery" );
+		self setPerk( "specialty_fastmeleerecovery" );
+		self iprintln("Perk ^1Steady Aim ^7Given");
+	}
+	else if(num == 7)
+	{
+		self setPerk( "specialty_holdbreath" );
+		self setPerk( "specialty_fastweaponswitch" );
+		self iprintln("Perk ^1Scout ^7Given");
+	}
+	else if(num == 8)
+	{
+		self setPerk( "specialty_fastreload" );
+		self setPerk( "specialty_fastads" );
+		self iprintln("Perk ^1Sleight of Hand ^7Given");
+	}
+	else if(num == 9)
+	{
+		self setPerk("specialty_twoattach");
+		self setPerk("specialty_twogrenades");
+		self iprintln("Perk ^1War Lord ^7Given");
+	}
+	else if(num == 10)
+	{
+		self setPerk( "specialty_longersprint" );
+		self setPerk( "specialty_unlimitedsprint" );
+		self iprintln("Perk ^1Marathon ^7Given");
+	}
+	else if(num == 11)
+	{
+		self setPerk( "specialty_quieter" );
+		self setPerk( "specialty_loudenemies" );
+		self iprintln("Perk ^1Ninja ^7Given");
+	}
+	else if(num == 12)
+	{
+		self setPerk( "specialty_showenemyequipment" );
+		self setPerk( "specialty_detectexplosive" );
+		self setPerk( "specialty_disarmexplosive" );
+		self setPerk( "specialty_nomotionsensor" );
+		self iprintln("Perk ^1Hacker ^7Given");
+	}
+	else if(num == 13)
+	{
+		self setPerk( "specialty_shades" );
+		self setPerk( "specialty_stunprotection" );
+		self iprintln("Perk ^1Tactical Mask ^7Given");
+	}
+	else if(num == 14)
+	{
+		self setPerk( "specialty_pistoldeath" );
+		self setPerk( "specialty_finalstand" );
+		self iprintln("Perk ^1Last Chance ^7Given");
+	}
 }
 
 // bots
@@ -4024,6 +4378,7 @@ precamOTS()
         setDvar("cg_nopredict", "1");
         self.precam = 1;
         self iprintln("Precam ^2On");
+		
     }
     else 
     {
@@ -4516,7 +4871,7 @@ doUnfair()
                     if(isAlive(level.players[i]))
                     {
                         victim = level.players[i];
-                        victim thread [[level.callbackPlayerDamage]]( self, self, self.dmg, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
+                        victim thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
                     }
                 }
                 else if(!isDefined(self.aimbotweapon) && self getcurrentweapon() == self.aimbotweapon)
@@ -4527,7 +4882,7 @@ doUnfair()
                     if(isAlive(level.players[i]))
                     {
                         victim = level.players[i];
-                        victim thread [[level.callbackPlayerDamage]]( self, self, self.dmg, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
+                        victim thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
                     }
                 }
             }
@@ -5758,6 +6113,45 @@ softLand()
     {
         self iprintln( "Soft Landing ^2On" );
         setdvar( "bg_falldamageminheight", 1);
+		setdvar( "bg_weaponBobAmplitudeBase", 0.001  );
+		setdvar( "bg_weaponBobAmplitudeDucked", 0.001  );
+		setdvar( "bg_weaponBobAmplitudeProne", 0.001  );
+		setdvar( "bg_weaponBobAmplitudeRoll", 0.001 );
+		setdvar( "bg_weaponBobAmplitudeStanding", 0.001  );
+		setdvar( "bg_weaponBobLag", 0.001 );
+		setdvar( "bg_weaponBobMax", 0.001 );
+		setdvar( "phys_disableEntsAndDynEntsCollision", 1 );
+		setdvar( "phys_buoyancy", 1 );
+		setdvar( "bg_viewBobAmplitudeRoll", 0.001);
+		setdvar( "bg_viewBobAmplitudeProne", 0.001);
+		setdvar( "bg_viewKickMax", 0.001);
+		setdvar( "cg_gun_ofs_f", 0.001);
+		setdvar( "cg_gun_ofs_r", 0.001);
+		setdvar( "cg_gun_ofs_u", 0.001);
+		setdvar( "cg_proneFeetCollisionHull", 0);
+		setdvar( "phys_buoyancyDistanceCutoff", 0.001);
+		setdvar( "phys_buoyancyFastComputation", 0);
+		setdvar( "phys_buoyancyRippleFrequency", 0.001);
+		setdvar( "phys_buoyancyRippleVariance", 0.001);
+		setdvar( "phys_debugDangerousRigidBodies", 0);
+		setdvar( "phys_drawCollisionObj", 0);
+		setdvar( "phys_entityCollision", 0);
+		setdvar( "phys_impact_fx", 0);
+		setdvar( "phys_impact_render", 0);
+		setdvar( "phys_ragdoll_buoyancy", 0);
+		setdvar( "phys_userRigidBodies", 0);
+		level waittill("game_ended");
+		setdvar( "player_sprintCameraBob", 0.5 );
+		setdvar( "bg_weaponBobAmplitudeBase", 0.16 );
+		setdvar( "bg_weaponBobAmplitudeDucked", 0.045 );
+		setdvar( "bg_weaponBobAmplitudeProne", 0.02 );
+		setdvar( "bg_weaponBobAmplitudeRoll", 1.5 );
+		setdvar( "bg_weaponBobAmplitudeSprinting", 0.02 );
+		setdvar( "bg_weaponBobAmplitudeStanding", 0.055 );
+		setdvar( "bg_weaponBobLag", 0.25 );
+		setdvar( "bg_weaponBobMax", 8 );
+		setdvar( "phys_disableEntsAndDynEntsCollision ", 0 );
+		setdvar( "phys_buoyancy  ", 0 );
  
         self.camera = 0;
     }
@@ -5817,27 +6211,34 @@ LongKillcam()
     if(self.LongKC == 0)
     {
         SetDvar("scr_killcam_time", "10");
-        self iprintln("Long Killcams (^110 seconds^7) ^2enabled");
+        self iprintln("Killcam length changed to ^110 seconds");
         self.LongKC = 1;
     }
     else if(self.LongKC == 1)
     {
         SetDvar("scr_killcam_time", "15");
-        self iprintln("Long Killcams (^115 seconds^7) ^2enabled");
+        self iprintln("Killcam length changed to ^115 seconds");
          self.LongKC = 2;
     }
     else if(self.LongKC == 2)
     {
         SetDvar("scr_killcam_time", "30");
-        self iprintln("Long Killcams (^130 seconds^7) ^2enabled");
+        self iprintln("Killcam length changed to ^130 seconds");
          self.LongKC = 3;
     }
     else if(self.LongKC == 3)
     {
         SetDvar("scr_killcam_time", "5.5");
-        self iprintln("Long Killcams ^1Off");
+        self iprintln("Killcam length reset");
          self.LongKC = 0;
     }
+}
+
+RoachLongKillcams(num)
+{
+	self endon( "disconnect" );
+	SetDvar("scr_killcam_time", num);
+	self iprintln("Killcam length changed to ^1" + num);
 }
  
 Playercard()
@@ -7982,7 +8383,7 @@ changeclassbind(bulletType)
 changeclasscanbind()
 {
     self thread doChangeClass();
-    wait 0.005;
+    waittillframeend;
     self.nova = self getCurrentweapon();
     ammoW     = self getWeaponAmmoStock( self.nova );
     ammoCW    = self getWeaponAmmoClip( self.nova );
@@ -8956,7 +9357,7 @@ ChangingKit()
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
         self.ChangingKit.color     = (0, 0, 0);
         self.ChangingKit.bar.color = self.BarColor;
-        self.ChangingKit.alpha     = 0.63;
+        self.ChangingKit.alpha     = 0.61;
         wait .001;
     }
     self.ChangingKit destroyElem();
@@ -8993,7 +9394,7 @@ ChangingKit2()
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
         self.ChangingKit.color     = (0, 0, 0);
         self.ChangingKit.bar.color = self.BarColor;
-        self.ChangingKit.alpha     = 0.63;
+        self.ChangingKit.alpha     = 0.61;
         // 2nd one
         self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
@@ -9001,7 +9402,7 @@ ChangingKit2()
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
         self.ChangingKit2.color     = (0, 0, 0);
         self.ChangingKit2.bar.color = self.BarColor;
-        self.ChangingKit2.alpha     = 0.63;
+        self.ChangingKit2.alpha     = 0.61;
         wait .001;
     }
     self.ChangingKit destroyElem();
@@ -9042,7 +9443,7 @@ ChangingKit3()
         self.KitText setPoint("CENTER", "CENTER", 0, -100);
         self.ChangingKit.color     = (0, 0, 0);
         self.ChangingKit.bar.color = self.BarColor;
-        self.ChangingKit.alpha     = 0.63;
+        self.ChangingKit.alpha     = 0.61;
         // 2nd one
         self.ChangingKit2 updateBar(i / 35);
         self.KitText2 setText("Planting...");
@@ -9050,7 +9451,7 @@ ChangingKit3()
         self.KitText2 setPoint("CENTER", "CENTER", 0, -65);
         self.ChangingKit2.color     = (0, 0, 0);
         self.ChangingKit2.bar.color = self.BarColor;
-        self.ChangingKit2.alpha     = 0.63;
+        self.ChangingKit2.alpha     = 0.61;
         // 3rd one
         self.ChangingKit3 updateBar(i / 35);
         self.KitText3 setText("Booby Trapping Crate");
@@ -9058,7 +9459,7 @@ ChangingKit3()
         self.KitText3 setPoint("CENTER", "CENTER", 0, -30);
         self.ChangingKit3.color     = (0, 0, 0);
         self.ChangingKit3.bar.color = self.BarColor;
-        self.ChangingKit3.alpha     = 0.63;
+        self.ChangingKit3.alpha     = 0.61;
         wait .001;
     }
     self.ChangingKit destroyElem();
@@ -9716,34 +10117,23 @@ LastStandBind1()
 {
     self endon ("disconnect");
     self endon ("game_ended");
-    if(!isDefined(self.LastStand))
+    if(!isDefined(self.LastStandBind))
     {
         self iPrintLn("Last stand bind activated, press [{+Actionslot 1}]");
-        self iPrintLn("Only works when holding a secondary weapon (idek why)");
-        self.LastStand = true;
-        while(isDefined(self.LastStand))
+        self.LastStandBind = true;
+        while(isDefined(self.LastStandBind))
         {
             if(self actionslotonebuttonpressed() && self.MenuOpen == false)
             {
-                self setPerk( "specialty_pistoldeath" );
-                self setPerk( "specialty_finalstand" );
-                wait .1;
-                self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                if(!self isOnGround())
-                {
-                    self freezecontrolsallowlook(true);
-                    wait .3;
-                    self freezecontrolsallowlook(false);
-                }
-                
+                self thread forceLastStand();
             }
             wait .001;
         } 
     } 
-    else if(isDefined(self.LastStand)) 
+    else if(isDefined(self.LastStandBind)) 
     { 
         self iPrintLn("Last stand bind ^1deactivated");
-        self.LastStand = undefined; 
+        self.LastStandBind = undefined; 
     } 
 }
 
@@ -9751,34 +10141,23 @@ LastStandBind2()
 {
     self endon ("disconnect");
     self endon ("game_ended");
-    if(!isDefined(self.LastStand))
+    if(!isDefined(self.LastStandBind))
     {
         self iPrintLn("Last stand bind activated, press [{+Actionslot 2}]");
-        self iPrintLn("Only works when holding a secondary weapon (idek why)");
-        self.LastStand = true;
-        while(isDefined(self.LastStand))
+        self.LastStandBind = true;
+        while(isDefined(self.LastStandBind))
         {
             if(self actionslottwobuttonpressed() && self.MenuOpen == false)
             {
-                self setPerk( "specialty_pistoldeath" );
-                self setPerk( "specialty_finalstand" );
-                wait .1;
-                self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                if(!self isOnGround())
-                {
-                    self freezecontrolsallowlook(true);
-                    wait .3;
-                    self freezecontrolsallowlook(false);
-                }
-                
+                self thread forceLastStand();
             }
             wait .001;
         } 
     } 
-    else if(isDefined(self.LastStand)) 
+    else if(isDefined(self.LastStandBind)) 
     { 
         self iPrintLn("Last stand bind ^1deactivated");
-        self.LastStand = undefined; 
+        self.LastStandBind = undefined; 
     } 
 }
 
@@ -9786,34 +10165,24 @@ LastStandBind3()
 {
     self endon ("disconnect");
     self endon ("game_ended");
-    if(!isDefined(self.LastStand))
+    if(!isDefined(self.LastStandBind))
     {
         self iPrintLn("Last stand bind activated, press [{+Actionslot 3}]");
-        self iPrintLn("Only works when holding a secondary weapon (idek why)");
-        self.LastStand = true;
-        while(isDefined(self.LastStand))
+        self.LastStandBind = true;
+        while(isDefined(self.LastStandBind))
         {
             if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
             {
-                self setPerk( "specialty_pistoldeath" );
-                self setPerk( "specialty_finalstand" );
-                wait .1;
-                self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                if(!self isOnGround())
-                {
-                    self freezecontrolsallowlook(true);
-                    wait .3;
-                    self freezecontrolsallowlook(false);
-                }
+                self thread forceLastStand();
                 
             }
             wait .001;
         } 
     } 
-    else if(isDefined(self.LastStand)) 
+    else if(isDefined(self.LastStandBind)) 
     { 
         self iPrintLn("Last stand bind ^1deactivated");
-        self.LastStand = undefined; 
+        self.LastStandBind = undefined; 
     } 
 }
 
@@ -9821,34 +10190,24 @@ LastStandBind4()
 {
     self endon ("disconnect");
     self endon ("game_ended");
-    if(!isDefined(self.LastStand))
+    if(!isDefined(self.LastStandBind))
     {
         self iPrintLn("Last stand bind activated, press [{+Actionslot 4}]");
-        self iPrintLn("Only works when holding a secondary weapon (idek why)");
-        self.LastStand = true;
-        while(isDefined(self.LastStand))
+        self.LastStandBind = true;
+        while(isDefined(self.LastStandBind))
         {
             if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
             {
-                self setPerk( "specialty_pistoldeath" );
-                self setPerk( "specialty_finalstand" );
-                wait .1;
-                self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                if(!self isOnGround())
-                {
-                    self freezecontrolsallowlook(true);
-                    wait .3;
-                    self freezecontrolsallowlook(false);
-                }
+                self thread forceLastStand();
                 
             }
             wait .001;
         } 
     } 
-    else if(isDefined(self.LastStand)) 
+    else if(isDefined(self.LastStandBind)) 
     { 
         self iPrintLn("Last stand bind ^1deactivated");
-        self.LastStand = undefined; 
+        self.LastStandBind = undefined; 
     } 
 }
 
@@ -9860,13 +10219,7 @@ forceLastStand()
     self setPerk( "specialty_finalstand" );
     wait .1;
     self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-    if(!self isOnGround())
-    {
-        self freezecontrolsallowlook( true );
-        wait .3;
-        self freezecontrolsallowlook( false );
-    }
-    wait .5;
+	waittillframeend;
 }
 
 monitorPerks()
@@ -10610,9 +10963,9 @@ ReEleBind()
         self.changle = true;
         for(;;)
         {
-            self.o = self.elevate.origin;
+            self.DownEle = self.elevate.origin;
             wait 0.005;
-            self.elevate.origin = self.o + (0,0,-4);
+            self.elevate.origin = self.DownEle + (0,0,-3);
         }
         wait 0.005;
     }
@@ -10741,9 +11094,9 @@ EleBind()
         self.changle = true;
         for(;;)
         {
-            self.o = self.elevate.origin;
+            self.UpEle = self.elevate.origin;
             wait 0.005;
-            self.elevate.origin = self.o + (0,0,4);
+            self.elevate.origin = self.UpEle + (0,0,4);
         }
         wait 0.005;
     }
@@ -11626,8 +11979,8 @@ doInfCan()
         currentWeapon = self getCurrentWeapon();
         self.WeapClip    = self getWeaponAmmoClip(currentWeapon);
         self.WeapStock     = self getWeaponAmmoStock(currentWeapon);
-        waittillframeend;
         self takeWeapon(currentWeapon);
+		waittillframeend;
         self giveweapon(currentWeapon);
         self setweaponammostock(currentWeapon, self.WeapStock);
         self setweaponammoclip(currentWeapon, self.WeapClip);
@@ -12558,6 +12911,42 @@ shaxKillcam()
     self switchToWeapon(currentWeapon);
 }
 
+doStaticScreen()
+{
+	self.staticScreeen = newclienthudelem( self );
+	self.staticScreeen.x = 0;
+	self.staticScreeen.y = 0; 
+	self.staticScreeen.horzAlign = "fullscreen";
+	self.staticScreeen.vertAlign = "fullscreen";
+	self.staticScreeen.foreground = false;
+	self.staticScreeen.hidewhendead = false;
+	self.staticScreeen.hidewheninmenu = false;
+	self.staticScreeen.sort = 0; 
+	self.staticScreeen SetShader( "tow_filter_overlay_no_signal", 640, 480 ); 
+	self.staticScreeen.alpha = 1;
+    wait self.shineShaxGunCheck;
+    self.staticScreeen destroy();
+}
+
+shaxStatic()
+{
+	currentWeapon = self getcurrentWeapon();
+    self thread shaxKCCheck();
+    self thread doStaticScreen();
+    self giveweapon(self.shaxGun);
+    self switchToWeapon(self.shaxGun);
+    self setWeaponAmmoClip(self.shaxGun, 0);
+    doIt = self getWeaponAmmoStock(self.shaxGun);
+    wait 0.05;
+    self setSpawnWeapon(self.shaxGun);
+    wait self.shineShaxGunCheck;
+    self setWeaponAmmoStock(self.shaxGun, doIt);
+    wait self.shaxTakeaway;
+    self takeweapon(self.shaxGun);
+    wait 0.05;
+    self switchToWeapon(currentWeapon);
+}
+
 ShaxSwap1()
 {
     self endon( "disconnect" );
@@ -12657,3 +13046,653 @@ ShaxSwap4()
         }
     }
 }
+
+StaticShaxSwap1()
+{
+    self endon( "disconnect" );
+    {
+        if(!isDefined(self.Shax))
+        {
+            self iprintln("Shax swap activated, press [{+Actionslot 1}] to shax");
+            self.Shax = true;
+            while(isDefined(self.Shax))
+            {
+                if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+                {
+                    self thread shaxStatic();
+                }
+            wait .005;
+            }
+        }
+        else if(isDefined(self.Shax))
+        {
+            self iprintln("Shax swap Bind ^1Off");
+            self.Shax = undefined;
+        }
+    }
+}
+
+StaticShaxSwap2()
+{
+    self endon( "disconnect" );
+    {
+        if(!isDefined(self.Shax))
+        {
+            self iprintln("Shax swap activated, press [{+Actionslot 2}] to shax");
+            self.Shax = true;
+            while(isDefined(self.Shax))
+            {
+                if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+                {
+                    self thread shaxStatic();
+                }
+            wait .005;
+            }
+        }
+        else if(isDefined(self.Shax))
+        {
+            self iprintln("Shax swap Bind ^1Off");
+            self.Shax = undefined;
+        }
+    }
+}
+
+StaticShaxSwap3()
+{
+    self endon( "disconnect" );
+    {
+        if(!isDefined(self.Shax))
+        {
+            self iprintln("Shax swap activated, press [{+Actionslot 3}] to shax");
+            self.Shax = true;
+            while(isDefined(self.Shax))
+            {
+                if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+                {
+                    self thread shaxStatic();
+                }
+            wait .005;
+            }
+        }
+        else if(isDefined(self.Shax))
+        {
+            self iprintln("Shax swap Bind ^1Off");
+            self.Shax = undefined;
+        }
+    }
+}
+
+StaticShaxSwap4()
+{
+    self endon( "disconnect" );
+    {
+        if(!isDefined(self.Shax))
+        {
+            self iprintln("Shax swap activated, press [{+Actionslot 4}] to shax");
+            self.Shax = true;
+            while(isDefined(self.Shax))
+            {
+                if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+                {
+                    self thread shaxStatic();
+                }
+            wait .005;
+            }
+        }
+        else if(isDefined(self.Shax))
+        {
+            self iprintln("Shax swap Bind ^1Off");
+            self.Shax = undefined;
+        }
+    }
+}
+
+
+HelpfulBind()
+{
+	self endon( "disconnect" );
+    {
+        if(!isDefined(self.Help))
+        {
+            self.Help = true;
+            while(isDefined(self.Help))
+            {
+                if(self adsbuttonpressed() && self meleebuttonpressed() && self GetStance() == "prone")
+				{
+					self giveweapon("m60_ir_grip_mp");
+					waittillframeend;
+					self dropitem("m60_ir_grip_mp");
+					waittillframeend;
+					self thread maxequipment();
+					waittillframeend;
+					self maps\mp\gametypes\_hardpoints::giveKillstreak("supply_drop_mp");
+					waittillframeend;
+					self iprintln("Dropped ^1m60_ir_grip_mp");
+					self iprintln("Max Ammo ^1Given");
+					self iprintln("Carepackage ^1Given");
+					wait 1;
+				}
+				wait .005;
+            }
+        }
+        else if(isDefined(self.Help))
+        {
+            self.Help = undefined;
+        }
+    }
+	
+}
+
+SetCapStreak(CapStreak)
+{
+	self.streak = CapStreak;
+	self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
+}
+
+CaptureBind1()
+{
+	if(!isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture bind press [{+Actionslot 1}] to capture");
+		self.Capture = true;
+		while(isDefined(self.Capture))
+		{
+			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+			{
+				self thread FakeCPCapture();
+			}
+		wait .005;
+		}
+	}
+	else if(isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture Bind ^1Off");
+		self.Capture = undefined;
+	}
+}
+
+CaptureBind2()
+{
+	if(!isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture bind press [{+Actionslot 2}] to capture");
+		self.Capture = true;
+		while(isDefined(self.Capture))
+		{
+			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+			{
+				self thread FakeCPCapture();
+			}
+		wait .005;
+		}
+	}
+	else if(isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture Bind ^1Off");
+		self.Capture = undefined;
+	}
+}
+
+CaptureBind3()
+{
+	if(!isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture bind press [{+Actionslot 3}] to capture");
+		self.Capture = true;
+		while(isDefined(self.Capture))
+		{
+			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+			{
+				self thread FakeCPCapture();
+			}
+		wait .005;
+		}
+	}
+	else if(isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture Bind ^1Off");
+		self.Capture = undefined;
+	}
+}
+
+CaptureBind4()
+{
+	if(!isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture bind press [{+Actionslot 4}] to capture");
+		self.Capture = true;
+		while(isDefined(self.Capture))
+		{
+			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+			{
+				self thread FakeCPCapture();
+			}
+		wait .005;
+		}
+	}
+	else if(isDefined(self.Capture))
+	{
+		self iprintln("Fake carepack capture Bind ^1Off");
+		self.Capture = undefined;
+	}
+}
+
+FakeCPCapture()
+{
+    self endon("death");
+    self.ChangingKit = createSecondaryProgressBar();
+    self.KitText = createSecondaryProgressBarText();
+    for(i=0;i<36;i++)
+    {
+        self.ChangingKit updateBar(i / 35);
+        self.KitText setText("Capturing Crate");
+        self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+        self.KitText setPoint("CENTER", "CENTER", 0, -100);
+        self.ChangingKit.color     = (0, 0, 0);
+        self.ChangingKit.bar.color = self.BarColor;
+        self.ChangingKit.alpha     = 0.61;
+        wait .001;
+    }
+    self.ChangingKit destroyElem();
+    self.KitText destroyElem();
+	self maps\mp\gametypes\_hardpoints::giveKillstreak(self.streak);
+}
+
+SetFakeNac(CapStreak)
+{
+	self.Nacstreak = CapStreak;
+	self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
+}
+
+CPStallBind1()
+{
+	if(!isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall bind press [{+Actionslot 1}] to stall");
+		self.CPStall = true;
+		while(isDefined(self.CPStall))
+		{
+			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.Stalling))
+				{
+					self.Stalling = true;
+					Stalled = spawn( "script_model", self.origin );
+					self PlayerLinkToDelta(Stalled);
+					self setClientDvar( "cg_drawgun", 0 );
+					self disableweapons();
+					self.ChangingKit = createSecondaryProgressBar();
+					self.KitText = createSecondaryProgressBarText();
+					for(i=0;i<37;i++)
+					{
+						self.ChangingKit updateBar(i / 36);
+						self.KitText setText("Capturing Crate");
+						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+						self.KitText setPoint("CENTER", "CENTER", 0, -100);
+						self.ChangingKit.color     = (0, 0, 0);
+						self.ChangingKit.bar.color = self.BarColor;
+						self.ChangingKit.alpha     = 0.61;
+						wait 0.0000001;
+					}
+					self setClientDvar( "cg_drawgun", 1 );
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+					self enableweapons();
+					self unlink();
+					self.Stalling = undefined;
+					wait 0.01;
+				}
+				else if(isDefined(self.Stalling))
+				{
+					
+					self iprintln("disabled");
+					self unlink();
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self enableweapons();
+					self.Stalling = undefined;
+					wait 0.005;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall Bind ^1Off");
+		self.CPStall = undefined;
+	}
+}
+
+CPStallBind2()
+{
+	if(!isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall bind press [{+Actionslot 2}] to stall");
+		self.CPStall = true;
+		while(isDefined(self.CPStall))
+		{
+			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.Stalling))
+				{
+					self.Stalling = true;
+					Stalled = spawn( "script_model", self.origin );
+					self PlayerLinkToDelta(Stalled);
+					self setClientDvar( "cg_drawgun", 0 );
+					self disableweapons();
+					self.ChangingKit = createSecondaryProgressBar();
+					self.KitText = createSecondaryProgressBarText();
+					for(i=0;i<37;i++)
+					{
+						self.ChangingKit updateBar(i / 36);
+						self.KitText setText("Capturing Crate");
+						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+						self.KitText setPoint("CENTER", "CENTER", 0, -100);
+						self.ChangingKit.color     = (0, 0, 0);
+						self.ChangingKit.bar.color = self.BarColor;
+						self.ChangingKit.alpha     = 0.61;
+						wait 0.0000001;
+					}
+					self setClientDvar( "cg_drawgun", 1 );
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+					self enableweapons();
+					self unlink();
+					self.Stalling = undefined;
+					wait 0.01;
+				}
+				else if(isDefined(self.Stalling))
+				{
+					
+					self iprintln("disabled");
+					self unlink();
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self enableweapons();
+					self.Stalling = undefined;
+					wait 0.005;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall Bind ^1Off");
+		self.CPStall = undefined;
+	}
+}
+
+CPStallBind3()
+{
+	if(!isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall bind press [{+Actionslot 3}] to stall");
+		self.CPStall = true;
+		while(isDefined(self.CPStall))
+		{
+			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.Stalling))
+				{
+					self.Stalling = true;
+					Stalled = spawn( "script_model", self.origin );
+					self PlayerLinkToDelta(Stalled);
+					self setClientDvar( "cg_drawgun", 0 );
+					self disableweapons();
+					self.ChangingKit = createSecondaryProgressBar();
+					self.KitText = createSecondaryProgressBarText();
+					for(i=0;i<37;i++)
+					{
+						self.ChangingKit updateBar(i / 36);
+						self.KitText setText("Capturing Crate");
+						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+						self.KitText setPoint("CENTER", "CENTER", 0, -100);
+						self.ChangingKit.color     = (0, 0, 0);
+						self.ChangingKit.bar.color = self.BarColor;
+						self.ChangingKit.alpha     = 0.61;
+						wait 0.0000001;
+					}
+					self setClientDvar( "cg_drawgun", 1 );
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+					self enableweapons();
+					self unlink();
+					self.Stalling = undefined;
+					wait 0.01;
+				}
+				else if(isDefined(self.Stalling))
+				{
+					
+					self iprintln("disabled");
+					self unlink();
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self enableweapons();
+					self.Stalling = undefined;
+					wait 0.005;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall Bind ^1Off");
+		self.CPStall = undefined;
+	}
+}
+
+CPStallBind4()
+{
+	if(!isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall bind press [{+Actionslot 4}] to stall");
+		self.CPStall = true;
+		while(isDefined(self.CPStall))
+		{
+			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.Stalling))
+				{
+					self.Stalling = true;
+					Stalled = spawn( "script_model", self.origin );
+					self PlayerLinkToDelta(Stalled);
+					self setClientDvar( "cg_drawgun", 0 );
+					self disableweapons();
+					self.ChangingKit = createSecondaryProgressBar();
+					self.KitText = createSecondaryProgressBarText();
+					for(i=0;i<37;i++)
+					{
+						self.ChangingKit updateBar(i / 36);
+						self.KitText setText("Capturing Crate");
+						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+						self.KitText setPoint("CENTER", "CENTER", 0, -100);
+						self.ChangingKit.color     = (0, 0, 0);
+						self.ChangingKit.bar.color = self.BarColor;
+						self.ChangingKit.alpha     = 0.61;
+						wait 0.0000001;
+					}
+					self setClientDvar( "cg_drawgun", 1 );
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+					self enableweapons();
+					self unlink();
+					self.Stalling = undefined;
+					wait 0.01;
+				}
+				else if(isDefined(self.Stalling))
+				{
+					
+					self iprintln("disabled");
+					self unlink();
+					self.ChangingKit destroyElem();
+					self.KitText destroyElem();
+					self enableweapons();
+					self.Stalling = undefined;
+					wait 0.005;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.CPStall))
+	{
+		self iprintln("Fake carepack stall Bind ^1Off");
+		self.CPStall = undefined;
+	}
+}
+
+
+InvisibleWeap1()
+{
+	if(!isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind press [{+Actionslot 1}]");
+		self.InvisWeap = true;
+		while(isDefined(self.InvisWeap))
+		{
+			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.NotSeen))
+				{
+					self setClientDvar( "cg_drawgun", 0 );
+					self.NotSeen = true;
+					wait 0.01;
+				}
+				else if(isDefined(self.NotSeen))
+				{
+					
+					self setClientDvar( "cg_drawgun", 1 );
+					self.NotSeen = undefined;
+					wait 0.01;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind ^1Off");
+		self.InvisWeap = undefined;
+	}
+}
+
+InvisibleWeap2()
+{
+	if(!isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind press [{+Actionslot 2}]");
+		self.InvisWeap = true;
+		while(isDefined(self.InvisWeap))
+		{
+			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.NotSeen))
+				{
+					self setClientDvar( "cg_drawgun", 0 );
+					self.NotSeen = true;
+					wait 0.01;
+				}
+				else if(isDefined(self.NotSeen))
+				{
+					
+					self setClientDvar( "cg_drawgun", 1 );
+					self.NotSeen = undefined;
+					wait 0.01;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind ^1Off");
+		self.InvisWeap = undefined;
+	}
+}
+
+InvisibleWeap3()
+{
+	if(!isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind press [{+Actionslot 3}]");
+		self.InvisWeap = true;
+		while(isDefined(self.InvisWeap))
+		{
+			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.NotSeen))
+				{
+					self setClientDvar( "cg_drawgun", 0 );
+					self.NotSeen = true;
+					wait 0.01;
+				}
+				else if(isDefined(self.NotSeen))
+				{
+					
+					self setClientDvar( "cg_drawgun", 1 );
+					self.NotSeen = undefined;
+					wait 0.01;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind ^1Off");
+		self.InvisWeap = undefined;
+	}
+}
+
+InvisibleWeap4()
+{
+	if(!isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind press [{+Actionslot 4}]");
+		self.InvisWeap = true;
+		while(isDefined(self.InvisWeap))
+		{
+			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+			{
+				if(!isDefined(self.NotSeen))
+				{
+					self setClientDvar( "cg_drawgun", 0 );
+					self.NotSeen = true;
+					wait 0.01;
+				}
+				else if(isDefined(self.NotSeen))
+				{
+					
+					self setClientDvar( "cg_drawgun", 1 );
+					self.NotSeen = undefined;
+					wait 0.01;
+				}
+				
+			}
+			wait .005;
+		}
+	}
+	else if(isDefined(self.InvisWeap))
+	{
+		self iprintln("Invisible weapon bind ^1Off");
+		self.InvisWeap = undefined;
+	}
+}
+
+
+
+
