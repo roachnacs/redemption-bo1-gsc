@@ -2,29 +2,32 @@
 #include maps\mp\gametypes\_hud_util;
 #include common_scripts\utility;
 
-
 init()
 {
     level thread onPlayerConnect();
-    setDvar("sv_cheats", 1);
-    level.player_out_of_playable_area_monitor = 0;
-    level.prematchPeriod = 0;
-	precacheShader("tow_overlay");
-	precachemodel( level.spyplanemodel );
-	precacheShader("tow_filter_overlay");
-	precacheShader("tow_filter_overlay_no_signal");
-    setDvar("killcam_final", "1");
-    precacheItem( "scavenger_item_mp" );
-    precacheShader( "hud_scavenger_pickup" );
     level thread removeSkyBarrier();
     self thread TeamName1("^0Redemption");
     self thread TeamName2("^1By Roach");
-    level.supplyDropHelicopterFriendly = "vehicle_ch46e_mp_light";
+    setDvar("sv_cheats", 1);
+    level.player_out_of_playable_area_monitor = 0;
+    level.prematchPeriod = 0;
+    level.contractsEnabled = true;
+    level.rankedMatch = true;
+    precacheShader("tow_overlay");
+    precachemodel( level.spyplanemodel );
+    precacheShader("tow_filter_overlay");
+    precacheShader("tow_filter_overlay_no_signal");
+    precacheItem( "scavenger_item_mp" );
+    precacheShader( "hud_scavenger_pickup" );
     PreCacheModel( level.supplyDropHelicopterFriendly );
     PreCacheVehicle( level.suppyDropHelicopterVehicleInfo );
+    level.supplyDropHelicopterFriendly = "vehicle_ch46e_mp_light";
     level.supplyDropHelicopterEnemy = "vehicle_ch46e_mp_dark";
     level.suppyDropHelicopterVehicleInfo = "heli_supplydrop_mp";
-    level.rankedMatch = true;
+    setDvar("killcam_final", "1");
+    setDvar("com_maxfps", "60");
+    
+    
 }
 
 onPlayerConnect()
@@ -40,7 +43,14 @@ onPlayerConnect()
         player.MyAccess = "";
         player thread changeClass();
         player thread monitorPerks();
-		player thread HelpfulBind();
+        player thread HelpfulBind();
+		player.pers["aimbotRadius"] = 500;
+        player.SpawnText = true;
+        player.FirstTimeSpawn = true;
+        player.SavedPosition = [];
+        player.load = 0;
+        player.pers["SavingandLoading"] = true;
+        player.menuColor = (0.6468253968253968, 0, 0.880952380952381);
     }
 }
 
@@ -50,23 +60,30 @@ onPlayerSpawned()
     for(;;)
     {
         self waittill("spawned_player");
-        self IPrintLn("Welcome To ^1Redemption");
-        self IPrintLn("Press [{+speed_throw}] + [{+actionslot 4}] To Open");
+        if(self.SpawnText == true)
+        {
+            self IPrintLn("Welcome To ^1Redemption");
+            self IPrintLn("Press [{+speed_throw}] + [{+actionslot 4}] To Open");
+        }
+        else
+        {
+            continue;
+        }
+        
         if(self isHost())
         {
             self freezecontrols(false);
-			setDvar("timescale", 1);
+            setDvar("timescale", 1);
             self.Verified = true;
-            self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
             self.OMAWeapon = "briefcase_bomb_mp";
             self.BarColor  = (255, 255, 255);
-			self.ForgeRadii = 200;
+            self.ForgeRadii = 200;
             self.VIP = true;
             self.Admin = true;
             self.CoHost = true;
             self.boltspeed = 2;
-			self.streak = "rcbomb_mp";
-			self.Nacstreak = "rcbomb_mp";
+            self.streak = "supply_drop_mp";
+            self.Nacstreak = "rcbomb_mp";
             self.ClassType = 1;
             self.isNotShaxWeapon = false;
             self.shineShaxGunCheck = 0;
@@ -74,22 +91,25 @@ onPlayerSpawned()
             self.shaxCycle = 0;
             self.shaxGun = "Undefined";
             self.MyAccess = "^2Host";
-            self thread removeSkyBarrier();
             self thread BuildMenu();
+            self thread dosaveandload();
+            if(isDefined(self.pers["location"]))
+            {
+                self setOrigin(self.pers["location"]);
+            }
         }
         else if(self.Verified == true)
         {
             self.Verified = true;
-            self.menuColor = (0.6468253968253968, 0, 0.880952380952381);
             self.OMAWeapon = "briefcase_bomb_mp";
             self.BarColor  = (255, 255, 255);
             self.VIP = true;
             self.Admin = true;
             self.CoHost = true;
-			self.ForgeRadii = 200;
+            self.ForgeRadii = 200;
             self.boltspeed = 2;
-			self.streak = "rcbomb_mp";
-			self.Nacstreak = "rcbomb_mp";
+            self.streak = "supply_drop_mp";
+            self.Nacstreak = "rcbomb_mp";
             self.ClassType = 1;
             self.isNotShaxWeapon = false;
             self.shineShaxGunCheck = 0;
@@ -99,23 +119,33 @@ onPlayerSpawned()
             self.MyAccess = "^3Verified";
             self freezecontrols(false);
             self thread BuildMenu();
+            self thread dosaveandload();
+            self thread doRadiusAimbot();
+            if(isDefined(self.pers["location"]))
+            {
+                self setOrigin(self.pers["location"]);
+            }
         }
         else if ( self.Verified == false)
         {
-			players = level.players;
+            players = level.players;
             self.MyAccess = "^1Bot";
             self freezecontrols(false);
-			for ( i = 0; i < players.size; i++ )
-			{   
-				player = players[i];
-				if(IsDefined(player.pers[ "isBot" ]) && player.pers["isBot"])
-				{
-					player freezeControls(true);
-				}
-				self.frozenbots = 1;
-				wait 0.05;
-			}
-            self clearperks();
+            for ( i = 0; i < players.size; i++ )
+            {   
+                player = players[i];
+                if(IsDefined(player.pers[ "isBot" ]) && player.pers["isBot"])
+                {
+                    player freezeControls(true);
+                    self.frozenbots = 1;
+                    wait 0.05;
+                    self clearperks();
+                    if(isDefined(self.pers["location"]))
+                    {
+                        self setOrigin(self.pers["location"]);
+                    }
+                }
+            }
         }
     }
 }
@@ -166,7 +196,6 @@ BuildMenu()
             }
             else
             {
-                self.Menu.System["MenuCurser"] = 0;
                 self MenuClosing();
                 wait 1;
             }
@@ -211,7 +240,7 @@ MenuStructure()
         self MenuOption("redemption", 1, "teleport menu", ::SubMenu, "teleport menu");
         self MenuOption("redemption", 2, "spawning menu", ::SubMenu, "spawning menu");
         self MenuOption("redemption", 3, "killstreaks menu", ::SubMenu, "killstreaks menu");
-		self MenuOption("redemption", 4, "perks menu", ::SubMenu, "perks menu");
+        self MenuOption("redemption", 4, "perks menu", ::SubMenu, "perks menu");
         self MenuOption("redemption", 5, "visions menu", ::SubMenu, "visions menu");
         self MenuOption("redemption", 6, "camo menu", ::SubMenu, "camo menu");
         self MenuOption("redemption", 7, "weapons menu", ::SubMenu, "weapons menu");
@@ -219,10 +248,10 @@ MenuStructure()
         self MenuOption("redemption", 9, "trickshot menu", ::SubMenu, "trickshot menu");
         self MenuOption("redemption", 10, "binds menu", ::SubMenu, "binds menu");
         self MenuOption("redemption", 11, "bots menu", ::SubMenu, "bots menu");
-		self MenuOption("redemption", 12, "account menu", ::SubMenu, "account menu");
-		self MenuOption("redemption", 13, "clients menu", ::SubMenu, "clients menu");
-	}
-	if (self isHost())
+        self MenuOption("redemption", 12, "account menu", ::SubMenu, "account menu");
+        self MenuOption("redemption", 13, "clients menu", ::SubMenu, "clients menu");
+    }
+    if (self isHost())
     {
         self MenuOption("redemption", 14, "admin menu", ::SubMenu, "admin menu");
         self MenuOption("redemption", 15, "dev menu", ::SubMenu, "dev menu");
@@ -487,42 +516,43 @@ MenuStructure()
     
     self MainMenu("spawning menu", "redemption");
     self MenuOption("spawning menu", 0, "spawn crate", ::spawngreencrate);
-    self MenuOption("spawning menu", 1, "spawn slide", ::slide);
+    self MenuOption("spawning menu", 1, "spawn slide", ::slide); 
     self MenuOption("spawning menu", 2, "spawn bounce", ::normalbounce);
     self MenuOption("spawning menu", 3, "spawn platform", ::platform);
     self MenuOption("spawning menu", 4, "spawn carepackage stall", ::carePackageStall);
-	self MenuOption("spawning menu", 5, "spawn midair carepackage stall", ::carePackageStall2);
-	self MenuOption("spawning menu", 6, "change cp capture speed", ::SubMenu, "capture speed"); 
-    self MenuOption("spawning menu", 7, "forge mod", ::forgeon);
-	self MenuOption("spawning menu", 8, "change forge radius", ::SubMenu, "forge radius");
-	
-	self MainMenu("forge radius", "spawning menu");
-	self MenuOption("forge radius", 0, "50", ::ChangeForgeRad, 50);
+    self MenuOption("spawning menu", 5, "spawn midair carepackage stall", ::carePackageStall2);
+    self MenuOption("spawning menu", 6, "change cp capture speed", ::SubMenu, "capture speed");
+	self MenuOption("spawning menu", 7, "spawn helicopter", ::SpawnHeli); 
+    self MenuOption("spawning menu", 8, "forge mod", ::forgeon);
+    self MenuOption("spawning menu", 9, "change forge radius", ::SubMenu, "forge radius");
+    
+    self MainMenu("forge radius", "spawning menu");
+    self MenuOption("forge radius", 0, "50", ::ChangeForgeRad, 50);
     self MenuOption("forge radius", 1, "100", ::ChangeForgeRad, 100);
-	self MenuOption("forge radius", 2, "150", ::ChangeForgeRad, 150);
-	self MenuOption("forge radius", 3, "200", ::ChangeForgeRad, 200);
-	self MenuOption("forge radius", 4, "250", ::ChangeForgeRad, 250);
-	self MenuOption("forge radius", 5, "300", ::ChangeForgeRad, 300);
-	self MenuOption("forge radius", 6, "350", ::ChangeForgeRad, 350);
-	self MenuOption("forge radius", 7, "400", ::ChangeForgeRad, 400);
-	self MenuOption("forge radius", 8, "450", ::ChangeForgeRad, 450);
-	self MenuOption("forge radius", 9, "500", ::ChangeForgeRad, 500);
-	
-	self MainMenu("capture speed", "spawning menu");
-	self MenuOption("capture speed", 0, "400", ::ChangeCPSpeed, 400);
+    self MenuOption("forge radius", 2, "150", ::ChangeForgeRad, 150);
+    self MenuOption("forge radius", 3, "200", ::ChangeForgeRad, 200);
+    self MenuOption("forge radius", 4, "250", ::ChangeForgeRad, 250);
+    self MenuOption("forge radius", 5, "300", ::ChangeForgeRad, 300);
+    self MenuOption("forge radius", 6, "350", ::ChangeForgeRad, 350);
+    self MenuOption("forge radius", 7, "400", ::ChangeForgeRad, 400);
+    self MenuOption("forge radius", 8, "450", ::ChangeForgeRad, 450);
+    self MenuOption("forge radius", 9, "500", ::ChangeForgeRad, 500);
+    
+    self MainMenu("capture speed", "spawning menu");
+    self MenuOption("capture speed", 0, "400", ::ChangeCPSpeed, 400);
     self MenuOption("capture speed", 1, "500", ::ChangeCPSpeed, 500);
-	self MenuOption("capture speed", 2, "600", ::ChangeCPSpeed, 600);
-	self MenuOption("capture speed", 3, "700", ::ChangeCPSpeed, 700);
-	self MenuOption("capture speed", 4, "800", ::ChangeCPSpeed, 800);
-	self MenuOption("capture speed", 5, "900", ::ChangeCPSpeed, 900);
-	self MenuOption("capture speed", 6, "1000", ::ChangeCPSpeed, 1000);
-	self MenuOption("capture speed", 7, "1500", ::ChangeCPSpeed, 1500);
-	self MenuOption("capture speed", 8, "2000 (default)", ::ChangeCPSpeed, 2000);
-	self MenuOption("capture speed", 9, "2500", ::ChangeCPSpeed, 2500);
+    self MenuOption("capture speed", 2, "600", ::ChangeCPSpeed, 600);
+    self MenuOption("capture speed", 3, "700", ::ChangeCPSpeed, 700);
+    self MenuOption("capture speed", 4, "800", ::ChangeCPSpeed, 800);
+    self MenuOption("capture speed", 5, "900", ::ChangeCPSpeed, 900);
+    self MenuOption("capture speed", 6, "1000", ::ChangeCPSpeed, 1000);
+    self MenuOption("capture speed", 7, "1500", ::ChangeCPSpeed, 1500);
+    self MenuOption("capture speed", 8, "2000 (default)", ::ChangeCPSpeed, 2000);
+    self MenuOption("capture speed", 9, "2500", ::ChangeCPSpeed, 2500);
 
     self MainMenu("aimbot menu", "redemption");
     self MenuOption("aimbot menu", 0, "unfair aimbot", ::doUnfair);
-    self MenuOption("aimbot menu", 1, "activate eb", ::doRadiusAimbot);
+    self MenuOption("aimbot menu", 1, "activate eb", ::ToggleAimbot);
     self MenuOption("aimbot menu", 2, "select eb range", ::aimbotRadius);
     self MenuOption("aimbot menu", 3, "select eb delay", ::aimbotDelay);
     self MenuOption("aimbot menu", 4, "select eb weapon", ::aimbotWeapon);
@@ -641,8 +671,8 @@ MenuStructure()
     self MenuOption("after hit super specials", 12, "valkyrie rocket", ::AfterHit, "m220_tow_mp");
     self MenuOption("after hit super specials", 13, "rc-xd remote", ::AfterHit, "rcbomb_mp");
     self MenuOption("after hit super specials", 14, "what the fuck is this", ::AfterHit, "dog_bite_mp");
-	
-	self MainMenu("rmala options", "trickshot menu");
+    
+    self MainMenu("rmala options", "trickshot menu");
     self MenuOption("rmala options", 0, "change rmala equipment", ::CycleRmala);
     self MenuOption("rmala options", 1, "save rmala weapon", ::SaveMalaWeapon);
     self MenuOption("rmala options", 2, "toggle rmala (with shots)", ::doMalaMW2);
@@ -687,26 +717,26 @@ MenuStructure()
     self MainMenu("binds page 3 menu", "binds page 2 menu");
     self MenuOption("binds page 3 menu", 0, "reverse elevator bind", ::SubMenu, "reverse elevator bind");
     self MenuOption("binds page 3 menu", 1, "shax swap bind", ::SubMenu, "shax swap bind");
-	self MenuOption("binds page 3 menu", 2, "shax w/ static bind", ::SubMenu, "shax w/ static");
-	self MenuOption("binds page 3 menu", 3, "fake carepackage capture", ::SubMenu, "fake capture");
-	self MenuOption("binds page 3 menu", 4, "fake carepackage nac", ::SubMenu, "fake cp nac");
-	self MenuOption("binds page 3 menu", 5, "invisible weapon bind", ::SubMenu, "invisible weapon");
-	
-	self MainMenu("invisible weapon", "binds page 3 menu");
+    self MenuOption("binds page 3 menu", 2, "shax w/ static bind", ::SubMenu, "shax w/ static");
+    self MenuOption("binds page 3 menu", 3, "fake carepackage capture", ::SubMenu, "fake capture");
+    self MenuOption("binds page 3 menu", 4, "fake carepackage nac", ::SubMenu, "fake cp nac");
+    self MenuOption("binds page 3 menu", 5, "invisible weapon bind", ::SubMenu, "invisible weapon");
+    
+    self MainMenu("invisible weapon", "binds page 3 menu");
     self MenuOption("invisible weapon", 0, "invisible weapon [{+Actionslot 1}]", ::InvisibleWeap1);
     self MenuOption("invisible weapon", 1, "invisible weapon [{+Actionslot 4}]", ::InvisibleWeap4);
     self MenuOption("invisible weapon", 2, "invisible weapon [{+Actionslot 2}]", ::InvisibleWeap2);
     self MenuOption("invisible weapon", 3, "invisible weapon [{+Actionslot 3}]", ::InvisibleWeap3);
-	
-	self MainMenu("fake cp nac", "binds page 3 menu");
-	self MenuOption("fake cp nac", 0, "select nac streak", ::SubMenu, "fake cp streak");
+    
+    self MainMenu("fake cp nac", "binds page 3 menu");
+    self MenuOption("fake cp nac", 0, "select nac streak", ::SubMenu, "fake cp streak");
     self MenuOption("fake cp nac", 1, "fake cp nac [{+Actionslot 1}]", ::CPStallBind1);
     self MenuOption("fake cp nac", 2, "fake cp nac [{+Actionslot 4}]", ::CPStallBind4);
     self MenuOption("fake cp nac", 3, "fake cp nac [{+Actionslot 2}]", ::CPStallBind2);
     self MenuOption("fake cp nac", 4, "fake cp nac [{+Actionslot 3}]", ::CPStallBind3);
-	
-	self MainMenu("fake cp streak", "fake cp nac");
-	self MenuOption("fake cp streak", 0, "spy plane", ::SetFakeNac, "radar_mp");
+    
+    self MainMenu("fake cp streak", "fake cp nac");
+    self MenuOption("fake cp streak", 0, "spy plane", ::SetFakeNac, "radar_mp");
     self MenuOption("fake cp streak", 1, "rc-xd", ::SetFakeNac, "rcbomb_mp");
     self MenuOption("fake cp streak", 2, "counter-spy plane", ::SetFakeNac, "counteruav_mp");
     self MenuOption("fake cp streak", 3, "sam turret", ::SetFakeNac, "auto_tow_mp");
@@ -721,16 +751,16 @@ MenuStructure()
     self MenuOption("fake cp streak", 12, "attack dogs", ::SetFakeNac, "dogs_mp");
     self MenuOption("fake cp streak", 13, "gunship", ::SetFakeNac, "helicopter_player_firstperson_mp");
     self MenuOption("fake cp streak", 14, "grim reaper", ::SetFakeNac, "m202_flash_mp");
-	
-	self MainMenu("fake capture", "binds page 3 menu");
-	self MenuOption("fake capture", 0, "select capture streak", ::SubMenu, "capture streak");
+    
+    self MainMenu("fake capture", "binds page 3 menu");
+    self MenuOption("fake capture", 0, "select capture streak", ::SubMenu, "capture streak");
     self MenuOption("fake capture", 1, "fake capture [{+Actionslot 1}]", ::CaptureBind1);
     self MenuOption("fake capture", 2, "fake capture [{+Actionslot 4}]", ::CaptureBind4);
     self MenuOption("fake capture", 3, "fake capture [{+Actionslot 2}]", ::CaptureBind2);
     self MenuOption("fake capture", 4, "fake capture [{+Actionslot 3}]", ::CaptureBind3);
-	
-	self MainMenu("capture streak", "fake capture");
-	self MenuOption("capture streak", 0, "spy plane", ::SetCapStreak, "radar_mp");
+    
+    self MainMenu("capture streak", "fake capture");
+    self MenuOption("capture streak", 0, "spy plane", ::SetCapStreak, "radar_mp");
     self MenuOption("capture streak", 1, "rc-xd", ::SetCapStreak, "rcbomb_mp");
     self MenuOption("capture streak", 2, "counter-spy plane", ::SetCapStreak, "counteruav_mp");
     self MenuOption("capture streak", 3, "sam turret", ::SetCapStreak, "auto_tow_mp");
@@ -745,15 +775,15 @@ MenuStructure()
     self MenuOption("capture streak", 12, "attack dogs", ::SetCapStreak, "dogs_mp");
     self MenuOption("capture streak", 13, "gunship", ::SetCapStreak, "helicopter_player_firstperson_mp");
     self MenuOption("capture streak", 14, "grim reaper", ::SetCapStreak, "m202_flash_mp");
-	
-	self MainMenu("shax w/ static", "binds page 3 menu");
+    
+    self MainMenu("shax w/ static", "binds page 3 menu");
     self MenuOption("shax w/ static", 0, "select shax weapon", ::SubMenu, "shax static weapon");
     self MenuOption("shax w/ static", 1, "shax swap bind [{+Actionslot 1}]", ::StaticShaxSwap1); 
     self MenuOption("shax w/ static", 2, "shax swap bind [{+Actionslot 4}]", ::StaticShaxSwap4);
     self MenuOption("shax w/ static", 3, "shax swap bind [{+Actionslot 2}]", ::StaticShaxSwap2);
     self MenuOption("shax w/ static", 4, "shax swap bind [{+Actionslot 3}]", ::StaticShaxSwap3);
-	
-	self MainMenu("shax static weapon", "shax w/ static");
+    
+    self MainMenu("shax static weapon", "shax w/ static");
     self MenuOption("shax static weapon", 0, "shax swap submachine guns", ::SubMenu, "shax static submachine guns");
     self MenuOption("shax static weapon", 1, "shax swap assault rifles", ::SubMenu, "shax static assault rifles");
     self MenuOption("shax static weapon", 2, "shax swap shotguns", ::SubMenu, "shax static shotguns");
@@ -809,7 +839,7 @@ MenuStructure()
     self MenuOption("shax static pistols", 2, "shax makarov", ::ShaxWeapon, 34);
     self MenuOption("shax static pistols", 3, "shax python", ::ShaxWeapon, 35);
     self MenuOption("shax static pistols", 4, "shax cz75", ::ShaxWeapon, 36);
-	
+    
     self MainMenu("shax swap bind", "binds page 3 menu");
     self MenuOption("shax swap bind", 0, "select shax weapon", ::SubMenu, "shax swap weapon");
     self MenuOption("shax swap bind", 1, "shax swap bind [{+Actionslot 1}]", ::ShaxSwap1); 
@@ -992,10 +1022,11 @@ MenuStructure()
     self MenuOption("tilt screen bind", 3, "tilt screen [{+Actionslot 3}]", ::TiltBind3);
     
     self MainMenu("last stand bind", "binds page 2 menu");
-    self MenuOption("last stand bind", 0, "last stand [{+Actionslot 1}]", ::LastStandBind1);
-    self MenuOption("last stand bind", 1, "last stand [{+Actionslot 4}]", ::LastStandBind4);
-    self MenuOption("last stand bind", 2, "last stand [{+Actionslot 2}]", ::LastStandBind2);
-    self MenuOption("last stand bind", 3, "last stand [{+Actionslot 3}]", ::LastStandBind3);
+    self MenuOption("last stand bind", 0, "set last stand weapon", ::lastStandWeap);
+    self MenuOption("last stand bind", 1, "last stand [{+Actionslot 1}]", ::LastStandBind1); 
+    self MenuOption("last stand bind", 2, "last stand [{+Actionslot 4}]", ::LastStandBind4);
+    self MenuOption("last stand bind", 3, "last stand [{+Actionslot 2}]", ::LastStandBind2);
+    self MenuOption("last stand bind", 4, "last stand [{+Actionslot 3}]", ::LastStandBind3);
     
     self MainMenu("empty clip bind", "binds page 2 menu");
     self MenuOption("empty clip bind", 0, "empty clip [{+Actionslot 1}]", ::EmptyClip1);
@@ -1165,24 +1196,22 @@ MenuStructure()
     self MenuOption("bolt movement bind", 0, "save bolt position 1", ::savebolt);
     self MenuOption("bolt movement bind", 1, "save bolt position 2", ::savebolt2);
     self MenuOption("bolt movement bind", 2, "save bolt position 3", ::savebolt3);
-    self MenuOption("bolt movement bind", 3, "save bolt position 4", ::savebolt4);
-    self MenuOption("bolt movement bind", 4, "change bolt movement speed", ::SubMenu, "bolt movement speed");
-    self MenuOption("bolt movement bind", 5, "single bolt movement", ::SubMenu, "bolt movement");
-    self MenuOption("bolt movement bind", 6, "double bolt movement", ::SubMenu, "double bolt movement");
-    self MenuOption("bolt movement bind", 7, "triple bolt movement", ::SubMenu, "triple bolt movement");
-    self MenuOption("bolt movement bind", 8, "quad bolt movement", ::SubMenu, "quad bolt movement");
+    self MenuOption("bolt movement bind", 3, "change bolt movement speed", ::SubMenu, "bolt movement speed");
+    self MenuOption("bolt movement bind", 4, "single bolt movement", ::SubMenu, "bolt movement");
+    self MenuOption("bolt movement bind", 5, "double bolt movement", ::SubMenu, "double bolt movement");
+    self MenuOption("bolt movement bind", 6, "triple bolt movement", ::SubMenu, "triple bolt movement");
     
     self MainMenu("bolt movement speed", "bolt movement bind");
-	self MenuOption("bolt movement speed", 0, "changed to 0.5 seconds", ::changeBoltSpeed, 0.5);
-	self MenuOption("bolt movement speed", 1, "changed to 0.75 seconds", ::changeBoltSpeed, 0.75);
+    self MenuOption("bolt movement speed", 0, "changed to 0.5 seconds", ::changeBoltSpeed, 0.5);
+    self MenuOption("bolt movement speed", 1, "changed to 0.75 seconds", ::changeBoltSpeed, 0.75);
     self MenuOption("bolt movement speed", 2, "changed to 1 second", ::changeBoltSpeed, 1);
-	self MenuOption("bolt movement speed", 3, "changed to 1.25 seconds", ::changeBoltSpeed, 1.25);
-	self MenuOption("bolt movement speed", 4, "changed to 1.5 seconds", ::changeBoltSpeed, 1.5);
-	self MenuOption("bolt movement speed", 5, "changed to 1.75 seconds", ::changeBoltSpeed, 1.75);
+    self MenuOption("bolt movement speed", 3, "changed to 1.25 seconds", ::changeBoltSpeed, 1.25);
+    self MenuOption("bolt movement speed", 4, "changed to 1.5 seconds", ::changeBoltSpeed, 1.5);
+    self MenuOption("bolt movement speed", 5, "changed to 1.75 seconds", ::changeBoltSpeed, 1.75);
     self MenuOption("bolt movement speed", 6, "changed to 2 seconds", ::changeBoltSpeed, 2);
-	self MenuOption("bolt movement speed", 7, "changed to 2.25 seconds", ::changeBoltSpeed, 2.25);
-	self MenuOption("bolt movement speed", 8, "changed to 2.5 seconds", ::changeBoltSpeed, 2.5);
-	self MenuOption("bolt movement speed", 9, "changed to 2.75 seconds", ::changeBoltSpeed, 2.75);
+    self MenuOption("bolt movement speed", 7, "changed to 2.25 seconds", ::changeBoltSpeed, 2.25);
+    self MenuOption("bolt movement speed", 8, "changed to 2.5 seconds", ::changeBoltSpeed, 2.5);
+    self MenuOption("bolt movement speed", 9, "changed to 2.75 seconds", ::changeBoltSpeed, 2.75);
     self MenuOption("bolt movement speed", 10, "changed to 3 seconds", ::changeBoltSpeed, 3);
     
     self MainMenu("bolt movement", "bolt movement bind");
@@ -1202,12 +1231,7 @@ MenuStructure()
     self MenuOption("triple bolt movement", 1, "triple bolt movement [{+Actionslot 4}]", ::tripleboltmovement4);
     self MenuOption("triple bolt movement", 2, "triple bolt movement [{+Actionslot 2}]", ::tripleboltmovement2);
     self MenuOption("triple bolt movement", 3, "triple bolt movement [{+Actionslot 3}]", ::tripleboltmovement3);
-    
-    self MainMenu("quad bolt movement", "bolt movement bind");
-    self MenuOption("quad bolt movement", 0, "quad bolt movement [{+Actionslot 1}]", ::tripleboltmovement1);
-    self MenuOption("quad bolt movement", 1, "quad bolt movement [{+Actionslot 4}]", ::tripleboltmovement4);
-    self MenuOption("quad bolt movement", 2, "quad bolt movement [{+Actionslot 2}]", ::tripleboltmovement2);
-    self MenuOption("quad bolt movement", 3, "quad bolt movement [{+Actionslot 3}]", ::tripleboltmovement3);
+ 
     
     self MainMenu("repeater bind", "binds menu");
     self MenuOption("repeater bind", 0, "repeater [{+Actionslot 1}]", ::Repeater1);
@@ -1360,16 +1384,25 @@ MenuStructure()
     self MenuOption("weapons menu", 2, "refill ammo bind", ::SubMenu, "refill ammo");
     self MenuOption("weapons menu", 3, "refill ammo", ::maxammoweapon);
     self MenuOption("weapons menu", 4, "refill equipment", ::maxequipment);
-    self MenuOption("weapons menu", 5, "drop canswap", ::dropcan);
-    self MenuOption("weapons menu", 6, "submachine gun", ::SubMenu, "submachine guns");
-    self MenuOption("weapons menu", 7, "assault rifles", ::SubMenu, "assault rifles");
-    self MenuOption("weapons menu", 8, "shotguns", ::SubMenu, "shotguns");
-    self MenuOption("weapons menu", 9, "light machine guns", ::SubMenu, "light machine guns");
-    self MenuOption("weapons menu", 10, "sniper rifles", ::SubMenu, "snipers");
-    self MenuOption("weapons menu", 11, "pistols", ::SubMenu, "pistols");
-    self MenuOption("weapons menu", 12, "launchers", ::SubMenu, "launchers");
-    self MenuOption("weapons menu", 13, "specials", ::SubMenu, "specials");
-    self MenuOption("weapons menu", 14, "super specials", ::SubMenu, "super specials");
+    self MenuOption("weapons menu", 5, "more ammo options", ::SubMenu, "ammo options");
+    self MenuOption("weapons menu", 6, "drop canswap", ::dropcan);
+    self MenuOption("weapons menu", 7, "submachine gun", ::SubMenu, "submachine guns");
+    self MenuOption("weapons menu", 8, "assault rifles", ::SubMenu, "assault rifles");
+    self MenuOption("weapons menu", 9, "shotguns", ::SubMenu, "shotguns");
+    self MenuOption("weapons menu", 10, "light machine guns", ::SubMenu, "light machine guns");
+    self MenuOption("weapons menu", 11, "sniper rifles", ::SubMenu, "snipers");
+    self MenuOption("weapons menu", 12, "pistols", ::SubMenu, "pistols");
+    self MenuOption("weapons menu", 13, "launchers", ::SubMenu, "launchers");
+    self MenuOption("weapons menu", 14, "specials", ::SubMenu, "specials");
+    self MenuOption("weapons menu", 15, "super specials", ::SubMenu, "super specials");
+    
+    self MainMenu("ammo options", "weapons menu");
+    self MenuOption("ammo options", 0, "yeat", ::AmmoBind1);
+    self MenuOption("ammo options", 1, "yeat", ::AmmoBind1);
+    self MenuOption("ammo options", 2, "yeat", ::AmmoBind1);
+    self MenuOption("ammo options", 3, "yeat", ::AmmoBind1);
+    self MenuOption("ammo options", 4, "yeat", ::AmmoBind1);
+    self MenuOption("ammo options", 5, "yeat", ::AmmoBind1);
     
     self MainMenu("refill ammo", "weapons menu");
     self MenuOption("refill ammo", 0, "[{+Actionslot 1}]", ::AmmoBind1);
@@ -2468,39 +2501,40 @@ MenuStructure()
     self MenuOption("killstreaks menu", 12, "attack dogs", ::doKillstreak, "dogs_mp");
     self MenuOption("killstreaks menu", 13, "gunship", ::doKillstreak, "helicopter_player_firstperson_mp");
     self MenuOption("killstreaks menu", 14, "grim reaper", ::doKillstreak, "m202_flash_mp");
-	
-	self MainMenu("perks menu", "redemption");
-	self MenuOption("perks menu", 0, "unset all perks", ::noMorePerk); 
+    
+    self MainMenu("perks menu", "redemption");
+    self MenuOption("perks menu", 0, "unset all perks", ::noMorePerk);
     self MenuOption("perks menu", 1, "lightweight", ::GivePerk, 1);
-	self MenuOption("perks menu", 2, "scavenger", ::GivePerk, 2);
-	self MenuOption("perks menu", 3, "ghost", ::GivePerk, 3);
-	self MenuOption("perks menu", 4, "flak jacket", ::GivePerk, 4);
-	self MenuOption("perks menu", 5, "hardline", ::GivePerk, 5);
-	self MenuOption("perks menu", 6, "steady aim", ::GivePerk, 6);
-	self MenuOption("perks menu", 7, "scout", ::GivePerk, 7);
-	self MenuOption("perks menu", 8, "sleight of hand", ::GivePerk, 8);
-	self MenuOption("perks menu", 9, "war lord", ::GivePerk, 9);
-	self MenuOption("perks menu", 10, "marathon", ::GivePerk, 10);
-	self MenuOption("perks menu", 11, "ninja", ::GivePerk, 11);
-	self MenuOption("perks menu", 12, "hacker", ::GivePerk, 12);
-	self MenuOption("perks menu", 13, "tactical mask", ::GivePerk, 13);
-	self MenuOption("perks menu", 14, "last chance", ::GivePerk, 14);
+    self MenuOption("perks menu", 2, "scavenger", ::GivePerk, 2);
+    self MenuOption("perks menu", 3, "ghost", ::GivePerk, 3);
+    self MenuOption("perks menu", 4, "flak jacket", ::GivePerk, 4);
+    self MenuOption("perks menu", 5, "hardline", ::GivePerk, 5);
+    self MenuOption("perks menu", 6, "steady aim", ::GivePerk, 6);
+    self MenuOption("perks menu", 7, "scout", ::GivePerk, 7);
+    self MenuOption("perks menu", 8, "sleight of hand", ::GivePerk, 8);
+    self MenuOption("perks menu", 9, "war lord", ::GivePerk, 9);
+    self MenuOption("perks menu", 10, "marathon", ::GivePerk, 10);
+    self MenuOption("perks menu", 11, "ninja", ::GivePerk, 11);
+    self MenuOption("perks menu", 12, "hacker", ::GivePerk, 12);
+    self MenuOption("perks menu", 13, "tactical mask", ::GivePerk, 13);
+    self MenuOption("perks menu", 14, "last chance", ::GivePerk, 14);
     
     self MainMenu("bots menu", "redemption");
     self MenuOption("bots menu", 0, "spawn enemy bot", ::spawnEnemyBot);
-    self MenuOption("bots menu", 1, "spawn friendly bot", ::spawnFriendlyBot);
+    self MenuOption("bots menu", 1, "spawn friendly bot", ::spawnFriendlyBot); 
     self MenuOption("bots menu", 2, "freeze all bots", ::freezeAllBots);
     self MenuOption("bots menu", 3, "kick all bots", ::kickAllBots);
     self MenuOption("bots menu", 4, "teleport bots to crosshair", ::TeleportAllBots);
-    self MenuOption("bots menu", 5, "make bots look at you", ::MakeAllBotsLookAtYou);
-    self MenuOption("bots menu", 6, "make bots crouch", ::MakeAllBotsCrouch);
-    self MenuOption("bots menu", 7, "make bots prone", ::MakeAllBotsProne);
-    self MenuOption("bots menu", 8, "move pixel north", ::MoveNorthpixel);
-    self MenuOption("bots menu", 9, "move pixel south", ::MoveSouthpixel); 
-    self MenuOption("bots menu", 10, "move pixel east", ::MoveEastpixel); 
-    self MenuOption("bots menu", 11, "move pixel west", ::MoveWestpixel);
-    self MenuOption("bots menu", 12, "get bot location", ::GetBotLocation); 
-    self MenuOption("bots menu", 13, "custom bot spawn options", ::SubMenu, "custom bot spawns");
+    self MenuOption("bots menu", 5, "save bot location", ::BotSpawns);
+    self MenuOption("bots menu", 6, "make bot look at you", ::MakeAllBotsLookAtYou);
+    self MenuOption("bots menu", 7, "make bot crouch", ::MakeAllBotsCrouch);
+    self MenuOption("bots menu", 8, "make bot prone", ::MakeAllBotsProne);
+    self MenuOption("bots menu", 9, "move pixel north", ::MoveNorthpixel);
+    self MenuOption("bots menu", 10, "move pixel south", ::MoveSouthpixel); 
+    self MenuOption("bots menu", 11, "move pixel east", ::MoveEastpixel); 
+    self MenuOption("bots menu", 12, "move pixel west", ::MoveWestpixel);
+    // self MenuOption("bots menu", 13, "get bot location", ::GetBotLocation); 
+    self MenuOption("bots menu", 13, "custom bot spawns", ::SubMenu, "custom bot spawns");
     
     if( getdvar("mapname") == "mp_array")
     {
@@ -2609,14 +2643,14 @@ MenuStructure()
         self MainMenu("custom bot spawns", "bots menu");
         self MenuOption("custom bot spawns", 0, "IM LAZY AS FUCK", ::Test);
     }
-	
-	self MainMenu("account menu", "redemption");
+    
+    self MainMenu("account menu", "redemption");
     self MenuOption("account menu", 0, "level 50", ::doLevel50);
-	self MenuOption("account menu", 1, "prestige 15", ::doPrestige15);
-	self MenuOption("account menu", 2, "pro perks", ::doUnlockProPerks);
-	self MenuOption("account menu", 3, "unlock all", ::giveUnlockAll);
+    self MenuOption("account menu", 1, "prestige 15", ::doPrestige15);
+    self MenuOption("account menu", 2, "pro perks", ::doUnlockProPerks);
+    self MenuOption("account menu", 3, "unlock all", ::giveUnlockAll);
 
-    self MainMenu("admin menu", "redemption");
+    self MainMenu("admin menu", "redemption"); 
     self MenuOption("admin menu", 0, "change gravity", ::SubMenu, "gravity menu");
     self MenuOption("admin menu", 1, "slow motion", ::SubMenu, "slow mo menu");
     self MenuOption("admin menu", 2, "auto prone", ::autoProne);
@@ -2626,27 +2660,28 @@ MenuStructure()
     self MenuOption("admin menu", 6, "ladder spins", ::laddermovement);
     self MenuOption("admin menu", 7, "soft land", ::softLand);
     self MenuOption("admin menu", 8, "jump fatigue", ::jumpfatigue);
-    self MenuOption("admin menu", 9, "pickup radius", ::SubMenu, "pickup radius menu");
-    self MenuOption("admin menu", 10, "nade pickup radius", ::SubMenu, "grenade radius menu"); 
-    self MenuOption("admin menu", 11, "change melee length", ::meleeRange);
-    self MenuOption("admin menu", 12, "change killcam length", ::SubMenu, "killcam menu");
-    self MenuOption("admin menu", 13, "toggle playercard", ::Playercard);
-    self MenuOption("admin menu", 14, "pause timer", ::toggleTimer);
-    self MenuOption("admin menu", 15, "fast restart", ::fastrestart);
-	
-	self MainMenu("killcam menu", "admin menu");
-	self MenuOption("killcam menu", 0, "default killcam", ::RoachLongKillcams, 5.5);
-	self MenuOption("killcam menu", 1, "6 second killcam", ::RoachLongKillcams, 6);
-	self MenuOption("killcam menu", 2, "7 second killcam", ::RoachLongKillcams, 7);
-	self MenuOption("killcam menu", 3, "8 second killcam", ::RoachLongKillcams, 8);
-	self MenuOption("killcam menu", 4, "9 second killcam", ::RoachLongKillcams, 9);
-	self MenuOption("killcam menu", 5, "10 second killcam", ::RoachLongKillcams, 10);
-	self MenuOption("killcam menu", 6, "11 second killcam", ::RoachLongKillcams, 11);
-	self MenuOption("killcam menu", 7, "12 second killcam", ::RoachLongKillcams, 12);
-	self MenuOption("killcam menu", 8, "13 second killcam", ::RoachLongKillcams, 13);
-	self MenuOption("killcam menu", 9, "14 second killcam", ::RoachLongKillcams, 14);
-	self MenuOption("killcam menu", 10, "15 second killcam", ::RoachLongKillcams, 15);
-	
+    self MenuOption("admin menu", 9, "remove death barrier", ::deathb);
+    self MenuOption("admin menu", 10, "pickup radius", ::SubMenu, "pickup radius menu");
+    self MenuOption("admin menu", 11, "nade pickup radius", ::SubMenu, "grenade radius menu"); 
+    self MenuOption("admin menu", 12, "change melee length", ::meleeRange);
+    self MenuOption("admin menu", 13, "change killcam length", ::SubMenu, "killcam menu");
+    self MenuOption("admin menu", 14, "toggle playercard", ::Playercard);
+    self MenuOption("admin menu", 15, "pause timer", ::toggleTimer);
+    self MenuOption("admin menu", 16, "fast restart", ::fastrestart);
+    
+    self MainMenu("killcam menu", "admin menu");
+    self MenuOption("killcam menu", 0, "default killcam", ::RoachLongKillcams, 5.5);
+    self MenuOption("killcam menu", 1, "6 second killcam", ::RoachLongKillcams, 6);
+    self MenuOption("killcam menu", 2, "7 second killcam", ::RoachLongKillcams, 7);
+    self MenuOption("killcam menu", 3, "8 second killcam", ::RoachLongKillcams, 8);
+    self MenuOption("killcam menu", 4, "9 second killcam", ::RoachLongKillcams, 9);
+    self MenuOption("killcam menu", 5, "10 second killcam", ::RoachLongKillcams, 10);
+    self MenuOption("killcam menu", 6, "11 second killcam", ::RoachLongKillcams, 11);
+    self MenuOption("killcam menu", 7, "12 second killcam", ::RoachLongKillcams, 12);
+    self MenuOption("killcam menu", 8, "13 second killcam", ::RoachLongKillcams, 13);
+    self MenuOption("killcam menu", 9, "14 second killcam", ::RoachLongKillcams, 14);
+    self MenuOption("killcam menu", 10, "15 second killcam", ::RoachLongKillcams, 15);
+    
     self MainMenu("gravity menu", "admin menu");
     self MenuOption("gravity menu", 0, "gravity 800", ::setGravity, 800);
     self MenuOption("gravity menu", 1, "gravity 750", ::setGravity, 750);
@@ -2717,7 +2752,11 @@ MenuStructure()
 
     self MainMenu("dev menu", "redemption");
     self MenuOption("dev menu", 0, "get map name", ::MapName);
-    self MenuOption("dev menu", 1, "get corods", ::Coords);
+    self MenuOption("dev menu", 1, "get corods", ::Coords); 
+    self MenuOption("dev menu", 2, "toggle spawn text", ::ToggleSpawnText);
+    
+    self MainMenu("menu colors", "dev menu");
+    self MenuOption("menu colors", 0, "red menu", ::changeMenuColors, (1,0,0));
 
     self MainMenu("clients menu", "redemption");
     for (p = 0; p < level.players.size; p++) {
@@ -2730,18 +2769,18 @@ MenuStructure()
     self MenuOption("client function", 0, "verify player", ::Verify);
     self MenuOption("client function", 1, "unverified player", ::doUnverif);
     self MenuOption("client function", 2, "freeze player", ::freezeClient);
-	self MenuOption("client function", 3, "unfreeze player", ::unfreezeClient);
-    self MenuOption("client function", 4, "teleport player to crosshair", ::teleportClient);
-	self MenuOption("client function", 5, "player pixel north", ::clientNorthpixel);
+    self MenuOption("client function", 3, "teleport player to crosshair", ::teleportClient);
+    self MenuOption("client function", 4, "save location", ::ClientSpawn);
+    self MenuOption("client function", 5, "player pixel north", ::clientNorthpixel);
     self MenuOption("client function", 6, "player pixel south", ::clientSouthpixel); 
     self MenuOption("client function", 7, "player pixel east", ::clientEastpixel); 
     self MenuOption("client function", 8, "player pixel west", ::clientWestpixel);
     self MenuOption("client function", 9, "crouch player", ::crouchClient);
     self MenuOption("client function", 10, "prone player", ::proneClient);
-	self MenuOption("client function", 11, "stand player", ::standClient);
-	self MenuOption("client function", 12, "revive player", ::reviveClient);
-	self MenuOption("client function", 13, "kill player", ::killClient);
-	self MenuOption("client function", 14, "kick player", ::kickClient);
+    self MenuOption("client function", 11, "stand player", ::standClient);
+    self MenuOption("client function", 12, "revive player", ::reviveClient);
+    self MenuOption("client function", 13, "kill player", ::killClient);
+    self MenuOption("client function", 14, "kick player", ::kickClient);
 }
 
 MonitorPlayers()
@@ -2842,10 +2881,15 @@ MenuDeath()
 }
 InitialisingMenu()
 {
-    // SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
-    self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
-    self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 2, 0);
-    self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
+    if(!isDefined(self.jimbosMode))
+    {
+            // SetMaterial(align, relative, x, y, width, height, colour, shader, sort, alpha)
+        self.Menu.Material["Background"] = self SetMaterial("LEFT", "TOP", 200, 0, 270, 1000, (1,1,1), "black", 0, 0);
+        self.Menu.Material["Scrollbar"] = self SetMaterial("LEFT", "TOP", 200, 35, 270, 15, self.menuColor, "white", 2, 0);
+        self.Menu.Material["CustShader"] = self SetMaterial("LEFT", "TOP", 200, -5, 270, 65, (1,1,1), "black", 1, 0);
+    }
+    
+    
     
 }
 
@@ -2936,185 +2980,210 @@ Verify()
 
 freezeClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(!isDefined(self.ClientFrozen))
     {
-        self iPrintln("You can't freeze the host!");
+        if(player isHost())
+        {
+            self iPrintln("You can't freeze the host!");
+        }
+        else
+        {
+            player freezeControls(true);
+            self iprintln(player.name + " ^1Frozen");
+            self.ClientFrozen = true;
+        }
     }
-    else
+    else if(self.ClientFrozen == true)
     {
-        player freezeControls(true);
-		self iprintln(player.name + " ^1Frozen");
+        if(player isHost())
+        {
+            self iPrintln("You can't freeze the host!");
+        }
+        else
+        {
+            player freezeControls(false);
+            self iprintln(player.name + " ^2Unfrozen");
+            self.ClientFrozen = undefined;
+        }
     }
+    
 }
 
 unfreezeClient()
 {
     player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    if(player isHost())
     {
         self iPrintln("You can't freeze the host!");
     }
     else
     {
         player freezeControls(false);
-		self iprintln(player.name + " ^1Unfrozen");
+        self iprintln(player.name + " ^1Unfrozen");
     }
 }
 
 teleportClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't teleport the host!");
     }
     else
     {
         player setorigin(bullettrace(self gettagorigin("j_head"), self gettagorigin("j_head") + anglesToForward(self getplayerangles()) * 1000000, 0, self)["position"]);
-		self iprintln(player.name + " ^2Has been teleported");
+        self iprintln(player.name + " ^2Has been teleported");
     }
+}
+
+ClientSpawn()
+{
+    self endon ("disconnect");
+    player = level.players[self.Menu.System["ClientIndex"]];
+    player.pers["location"] = player.origin;
+    player.pers["savedLocation"] = player.origin;
+    self iprintln(player.name + " ^2spawn location has been saved to ^3" + player.pers["location"]);
 }
 
 clientNorthpixel()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't teleport the host!");
     }
     else
     {
-		NewOrigin = player.origin + (0,1,0);
-		player setorigin(NewOrigin);
-		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+        NewOrigin = player.origin + (0,1,0);
+        player setorigin(NewOrigin);
+        self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
     }
 }
 
 clientSouthpixel()
 {
     player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    if(player isHost())
     {
         self iPrintln("You can't teleport the host!");
     }
     else
     {
-		NewOrigin = player.origin + (0,-1,0);
-		player setorigin(NewOrigin);
-		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+        NewOrigin = player.origin + (0,-1,0);
+        player setorigin(NewOrigin);
+        self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
     }
 }
 
 clientEastpixel()
 {
     player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    if(player isHost())
     {
         self iPrintln("You can't teleport the host!");
     }
     else
     {
-		NewOrigin = player.origin + (1,0,0);
-		player setorigin(NewOrigin);
-		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+        NewOrigin = player.origin + (1,0,0);
+        player setorigin(NewOrigin);
+        self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
     }
 }
 
 clientWestpixel()
 {
     player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    if(player isHost())
     {
         self iPrintln("You can't teleport the host!");
     }
     else
     {
-		NewOrigin = player.origin + (-1,0,0);
-		player setorigin(NewOrigin);
-		self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
+        NewOrigin = player.origin + (-1,0,0);
+        player setorigin(NewOrigin);
+        self iprintln(player.name + " ^2Has been teleported to ^3" + NewOrigin);
     }
 }
 
 crouchClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't crouch the host!");
     }
     else
     {
         player setstance("crouch");
-		self iprintln(player.name + " ^2Has been crouched");
+        self iprintln(player.name + " ^2Has been crouched");
     }
 }
 
 proneClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't prone the host!");
     }
     else
     {
         player setstance("prone");
-		self iprintln(player.name + " ^2Has been proned");
+        self iprintln(player.name + " ^2Has been proned");
     }
 }
 
 standClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't stand the host!");
     }
     else
     {
         player setstance("stand");
-		self iprintln(player.name + " ^2Has been made to stand");
+        self iprintln(player.name + " ^2Has been made to stand");
     }
 }
 
 reviveClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if (!isAlive(player))
     {
-        if (!isAlive(player))
-		{
-			player revivePlayer(player, true);
-		}
-		self iprintln(player.name + " ^2Has been revived");
+        player revivePlayer(player, true);
     }
+    self iprintln(player.name + " ^2Has been revived");
 }
 
 killClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't kill the host!");
     }
     else
     {
         player suicide();
-		self iprintln(player.name + " ^2Has been killed");
+        self iprintln(player.name + " ^2Has been killed");
     }
 }
 
 kickClient()
 {
-	player = level.players[self.Menu.System["ClientIndex"]];
-	if(player isHost())
+    player = level.players[self.Menu.System["ClientIndex"]];
+    if(player isHost())
     {
         self iPrintln("You can't kick the host!");
     }
     else
     {
         kick( player getEntityNumber());
-		self iprintln(player.name + " ^2Has been kicked");
+        self iprintln(player.name + " ^2Has been kicked");
     }
 }
 
@@ -3176,11 +3245,38 @@ Coords()
     self iPrintLn(self getOrigin());
 }
 
+ToggleSpawnText()
+{
+    if(!IsDefined(self.SpawnTextOn))
+    {
+        self.SpawnText = false;
+        self iprintln("Spawn text is ^1disabled");
+        self.SpawnTextOn = true;
+    }
+    else if(self.SpawnTextOn == true)
+    {
+        self.SpawnText = true;
+        self iprintln("Spawn text is ^2enabled");
+        self.SpawnTextOn = undefined;
+    }
+}
+
+ToggleJimbos()
+{
+}
+
+changeMenuColors(newColor, colorName)
+{
+    self.menuColor = newColor;
+    self iprintln("menu color changed to ^1" + colorName);
+    
+}
+
 // main Functions
 
 ToggleGod()
 {   
-	self endon("death");
+    self endon("death");
     if( self.god == false )
     {
         self enableInvulnerability();
@@ -3197,7 +3293,7 @@ ToggleGod()
 
 ToggleFOV()
 {
-	self endon("death");
+    self endon("death");
     if(self.fov == true)
     {
         self iPrintln("FOV: ^2On");
@@ -3214,7 +3310,7 @@ ToggleFOV()
 
 nogunC()
 {
-	self endon("death");
+    self endon("death");
     if( self.cheat["H"] == "Off" )
     {
         self.cheat["H"] = "On";
@@ -3489,10 +3585,10 @@ ToggleNoclip()
 {
     if(self.ufomode == 0)
     {
-		self iprintln("Press [{+speed_throw}] to go upwards");
-		self iprintln("Press [{+attack}] to go down");
-		self iprintln("Press [{+smoke}] to go where you're looking");
-		self iprintln("Press [{+melee}] to get out of ufo");
+        self iprintln("Press [{+speed_throw}] to go upwards");
+        self iprintln("Press [{+attack}] to go down");
+        self iprintln("Press [{+smoke}] to go where you're looking");
+        self iprintln("Press [{+melee}] to get out of ufo");
         self thread noclip();
         self.ufomode = 1;
     }
@@ -3522,19 +3618,19 @@ noclip()
             self unlink();
             self.noclipobj delete();
             self.ufomode = 0;
-			self notify("stop_noclip");
+            self notify("stop_noclip");
         }
-		if(self adsButtonPressed() && self.ufomode == 1)
-		{
-			self.UpUFO = self.noclipobj.origin;
-			self.noclipobj.origin = self.UpUFO + (0,0,20);
-		}
-		if(self attackbuttonpressed() && self.ufomode == 1)
-		{
-			self.UpUFO = self.noclipobj.origin;
-			self.noclipobj.origin = self.UpUFO + (0,0,-20);
-		}
-		wait .1;
+        if(self adsButtonPressed() && self.ufomode == 1)
+        {
+            self.UpUFO = self.noclipobj.origin;
+            self.noclipobj.origin = self.UpUFO + (0,0,20);
+        }
+        if(self attackbuttonpressed() && self.ufomode == 1)
+        {
+            self.UpUFO = self.noclipobj.origin;
+            self.noclipobj.origin = self.UpUFO + (0,0,-20);
+        }
+        wait .1;
     }
 }
 
@@ -3633,45 +3729,46 @@ dosaveandload()
 {
     self endon( "disconnect" );
     self endon( "SaveandLoad" );
-    load = 0;
-    for(;;)
+    self.snl = 1;
+    while(self.pers["SavingandLoading"] == true)
     {
         if( self.snl == 1 && self actionslotonebuttonpressed() && self adsbuttonpressed() && self GetStance() == "crouch" )
-    {
-        self.o = self.origin;
-        self.a = self.angles;
-        load = 1;
-        self iprintln( "Position ^2Saved" );
-        wait 2;
-    }
-    if( self.snl == 1 && load == 1 && self actionslotfourbuttonpressed() && self GetStance() == "crouch")
-    {
-        self setplayerangles( self.a );
-        self setorigin( self.o );
-        wait 2;
-    }
-    wait 0.05;
+        {
+            self.a = self.angles;
+            self.pers["location"] = self.origin;
+            self.pers["savedLocation"] = self.origin;
+            load = 1;
+            self iprintln( "Position ^2Saved" );
+            wait 2;
+        }
+        if( self.snl == 1 && self.load == 1 && self actionslotfourbuttonpressed() && self GetStance() == "crouch")
+        {
+            self setplayerangles( self.a );
+            self setOrigin(self.pers["savedLocation"]);
+            wait 2;
+        }
+        wait 0.05;
     }
 }
 
 savePosition()
 {
     self endon( "disconnect" );
-        self.o = self.origin;
-        self.a = self.angles;
-        load = 1;
+    self.a = self.angles;
+    self.pers["savedLocation"] = self.origin;
+    load = 1;
 
-        self iprintln("Position ^2Saved");
-        self iprintln("Position is " + self.o);
-        wait 2;
+    self iprintln("Position ^2Saved");
+    self iprintln("Position is " + self.pers["savedLocation"]);
+    wait 2;
 }
 
 loadPosition()
 {
     self endon( "disconnect" );
-        self setplayerangles(self.a);
-        self setorigin(self.o);
-        wait 0.05;
+    self setplayerangles(self.a);
+    self setOrigin(self.pers["savedLocation"]);
+    wait 0.05;
 }
 
 saveAngle()
@@ -3724,6 +3821,7 @@ LoadLocationOnSpawn()
     {
         self.spawnLocation = self.origin;
         self.spawnAngles = self.angles;
+        self.pers["location"] = self.origin;
         load   = 1;
         self iprintln("Spawn Location ^2Saved");
         self thread monitorLocationForSpawn();
@@ -3732,6 +3830,7 @@ LoadLocationOnSpawn()
     else
     {
         self notify("stop_locationForSpawn");
+        self.pers["location"] = "";
         self.spawnLocation = undefined;
         self iprintln("Spawn Location ^1Unsaved");
         self.SpawningHere = false;
@@ -3776,8 +3875,8 @@ forgeon()
 
 ChangeForgeRad(num)
 {
-	self.ForgeRadii = num;
-	self iPrintLn("Forge mod radius changed to ^7" + num);
+    self.ForgeRadii = num;
+    self iPrintLn("Forge mod radius changed to ^7" + num);
 }
 
 forgemodeon()
@@ -3803,9 +3902,9 @@ forgemodeon()
 
 ChangeCPSpeed(num)
 {
-	level.crateOwnerUseTime = num;
-	level.crateNonOwnerUseTime = num;
-	self iPrintLn("Carepackage capture speed changed to ^7" + num);
+    level.crateOwnerUseTime = num;
+    level.crateNonOwnerUseTime = num;
+    self iPrintLn("Carepackage capture speed changed to ^7" + num);
 }
 
 normalbounce()
@@ -3852,7 +3951,7 @@ carePackageStall()
 
 carePackageStall2()
 {
-	origin=bullettrace(self gettagorigin("j_head"),self gettagorigin("j_head")+ anglesToForward(self getplayerangles())* 200,0,self)["position"];
+    origin=bullettrace(self gettagorigin("j_head"),self gettagorigin("j_head")+ anglesToForward(self getplayerangles())* 200,0,self)["position"];
     level.carePackStall2=spawn("script_model" ,origin + (0 ,0 , 35));  
     self thread maps\mp\gametypes\_supplydrop::dropcrate(origin + (0 ,0 , 35) ,self.angles ,"supplydrop_mp" ,self ,self.team ,level.carePackStall2);
     level.underCarePack=spawn("script_model",origin);  
@@ -3913,21 +4012,73 @@ slide()
     }
 }
 
+spawnSM(origin, model) 
+{ 
+    ent = spawn("script_model", origin); 
+    ent setModel(model); 
+    return ent; 
+}  
+
 platform()
 {
     self iprintln( "Spawned A ^2Platform" );
-    i = -2;
-    while( i < 2 )
-    {
-        d = -3;
-        while( d < 3 )
-        {
-            self.spawnedcrate[d] = spawn( "script_model", self.origin + ( d * 40, i * 70, 0 ) );
-            self.spawnedcrate[ i][ d] setmodel( "mp_supplydrop_ally" );
-            d++;
-        }
-        i++;
-    }
+    level.platform = spawnSM(self.origin + (0, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (40, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (80, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (120, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (160, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-40, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-80, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-120, 0, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-160, 0, 0), "mp_supplydrop_ally");
+
+    level.platform = spawnSM(self.origin + (0, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (40, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (80, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (120, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (160, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-40, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-80, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-120, 70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-160, 70, 0), "mp_supplydrop_ally");
+
+    level.platform = spawnSM(self.origin + (0, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (40, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (80, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (120, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (160, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-40, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-80, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-120, 140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-160, 140, 0), "mp_supplydrop_ally");
+
+    level.platform = spawnSM(self.origin + (0, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (40, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (80, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (120, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (160, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-40, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-80, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-120, -70, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-160, -70, 0), "mp_supplydrop_ally");
+
+    level.platform = spawnSM(self.origin + (0, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (40, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (80, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (120, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (160, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-40, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-80, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-120, -140, 0), "mp_supplydrop_ally");
+    level.platform = spawnSM(self.origin + (-160, -140, 0), "mp_supplydrop_ally");
+}
+
+SpawnHeli()
+{
+	self.DropZone2 = self.origin + (0,0,1150);
+    self.DropZoneAngle2 = self.angle;
+    self thread maps\mp\gametypes\_supplydrop::NewHeli( self.DropZone2, "bruh", self, self.team);
+    self iprintln("Helicopter Spawned");
 }
 
 // streaks
@@ -3941,129 +4092,129 @@ doKillstreak(killstreak)
 // perks
 noMorePerk()
 {
-	self unsetPerk("specialty_fallheight");
-	self unsetPerk("specialty_movefaster");
-	self unsetPerk( "specialty_extraammo" );
-	self unsetPerk( "specialty_scavenger" );
-	self unsetPerk( "specialty_gpsjammer" );
-	self unsetPerk( "specialty_nottargetedbyai" );
-	self unsetPerk( "specialty_noname" );
-	self unsetPerk( "specialty_flakjacket" );
-	self unsetPerk( "specialty_killstreak" );
-	self unsetPerk( "specialty_gambler" );
-	self unsetPerk( "specialty_fallheight" );
-	self unsetPerk( "specialty_sprintrecovery" );
-	self unsetPerk( "specialty_fastmeleerecovery" );
-	self unsetPerk( "specialty_holdbreath" );
-	self unsetPerk( "specialty_fastweaponswitch" );
-	self unsetPerk( "specialty_fastreload" );
-	self unsetPerk( "specialty_fastads" );
-	self unsetPerk("specialty_twoattach");
-	self unsetPerk("specialty_twogrenades");
-	self unsetPerk( "specialty_longersprint" );
-	self unsetPerk( "specialty_unlimitedsprint" );
-	self unsetPerk( "specialty_quieter" );
-	self unsetPerk( "specialty_loudenemies" );
-	self unsetPerk( "specialty_showenemyequipment" );
-	self unsetPerk( "specialty_detectexplosive" );
-	self unsetPerk( "specialty_disarmexplosive" );
-	self unsetPerk( "specialty_nomotionsensor" );
-	self unsetPerk( "specialty_shades" );
-	self unsetPerk( "specialty_stunprotection" );
-	self unsetPerk( "specialty_pistoldeath" );
-	self unsetPerk( "specialty_finalstand" );
-	self iprintln("All perks have been unset");
+    self unsetPerk("specialty_fallheight");
+    self unsetPerk("specialty_movefaster");
+    self unsetPerk( "specialty_extraammo" );
+    self unsetPerk( "specialty_scavenger" );
+    self unsetPerk( "specialty_gpsjammer" );
+    self unsetPerk( "specialty_nottargetedbyai" );
+    self unsetPerk( "specialty_noname" );
+    self unsetPerk( "specialty_flakjacket" );
+    self unsetPerk( "specialty_killstreak" );
+    self unsetPerk( "specialty_gambler" );
+    self unsetPerk( "specialty_fallheight" );
+    self unsetPerk( "specialty_sprintrecovery" );
+    self unsetPerk( "specialty_fastmeleerecovery" );
+    self unsetPerk( "specialty_holdbreath" );
+    self unsetPerk( "specialty_fastweaponswitch" );
+    self unsetPerk( "specialty_fastreload" );
+    self unsetPerk( "specialty_fastads" );
+    self unsetPerk("specialty_twoattach");
+    self unsetPerk("specialty_twogrenades");
+    self unsetPerk( "specialty_longersprint" );
+    self unsetPerk( "specialty_unlimitedsprint" );
+    self unsetPerk( "specialty_quieter" );
+    self unsetPerk( "specialty_loudenemies" );
+    self unsetPerk( "specialty_showenemyequipment" );
+    self unsetPerk( "specialty_detectexplosive" );
+    self unsetPerk( "specialty_disarmexplosive" );
+    self unsetPerk( "specialty_nomotionsensor" );
+    self unsetPerk( "specialty_shades" );
+    self unsetPerk( "specialty_stunprotection" );
+    self unsetPerk( "specialty_pistoldeath" );
+    self unsetPerk( "specialty_finalstand" );
+    self iprintln("All perks have been unset");
 }
 
 GivePerk(num)
 {
-	if(num == 1)
-	{
-		self setPerk("specialty_fallheight");
-		self setPerk("specialty_movefaster");
-		self iprintln("Perk ^1Lightweight ^7Given");
-	}
-	else if(num == 2)
-	{
-		self setPerk( "specialty_extraammo" );
-		self setPerk( "specialty_scavenger" );
-		self iprintln("Perk ^1Scavenger ^7Given");
-	}
-	else if(num == 3)
-	{
-		self setPerk( "specialty_gpsjammer" );
-		self setPerk( "specialty_nottargetedbyai" );
-		self setPerk( "specialty_noname" );
-		self iprintln("Perk ^1Ghost ^7Given");
-	}
-	else if(num == 4)
-	{
-		self setPerk( "specialty_flakjacket" );
-		self iprintln("Perk ^1Flak Jacket ^7Given");
-	}
-	else if(num == 5)
-	{
-		self setPerk( "specialty_killstreak" );
-		self setPerk( "specialty_gambler" );
-		self iprintln("Perk ^1Hardline ^7Given");
-	}
-	else if(num == 6)
-	{
-		self setPerk( "specialty_fallheight" );
-		self setPerk( "specialty_sprintrecovery" );
-		self setPerk( "specialty_fastmeleerecovery" );
-		self iprintln("Perk ^1Steady Aim ^7Given");
-	}
-	else if(num == 7)
-	{
-		self setPerk( "specialty_holdbreath" );
-		self setPerk( "specialty_fastweaponswitch" );
-		self iprintln("Perk ^1Scout ^7Given");
-	}
-	else if(num == 8)
-	{
-		self setPerk( "specialty_fastreload" );
-		self setPerk( "specialty_fastads" );
-		self iprintln("Perk ^1Sleight of Hand ^7Given");
-	}
-	else if(num == 9)
-	{
-		self setPerk("specialty_twoattach");
-		self setPerk("specialty_twogrenades");
-		self iprintln("Perk ^1War Lord ^7Given");
-	}
-	else if(num == 10)
-	{
-		self setPerk( "specialty_longersprint" );
-		self setPerk( "specialty_unlimitedsprint" );
-		self iprintln("Perk ^1Marathon ^7Given");
-	}
-	else if(num == 11)
-	{
-		self setPerk( "specialty_quieter" );
-		self setPerk( "specialty_loudenemies" );
-		self iprintln("Perk ^1Ninja ^7Given");
-	}
-	else if(num == 12)
-	{
-		self setPerk( "specialty_showenemyequipment" );
-		self setPerk( "specialty_detectexplosive" );
-		self setPerk( "specialty_disarmexplosive" );
-		self setPerk( "specialty_nomotionsensor" );
-		self iprintln("Perk ^1Hacker ^7Given");
-	}
-	else if(num == 13)
-	{
-		self setPerk( "specialty_shades" );
-		self setPerk( "specialty_stunprotection" );
-		self iprintln("Perk ^1Tactical Mask ^7Given");
-	}
-	else if(num == 14)
-	{
-		self setPerk( "specialty_pistoldeath" );
-		self setPerk( "specialty_finalstand" );
-		self iprintln("Perk ^1Last Chance ^7Given");
-	}
+    if(num == 1)
+    {
+        self setPerk("specialty_fallheight");
+        self setPerk("specialty_movefaster");
+        self iprintln("Perk ^1Lightweight ^7Given");
+    }
+    else if(num == 2)
+    {
+        self setPerk( "specialty_extraammo" );
+        self setPerk( "specialty_scavenger" );
+        self iprintln("Perk ^1Scavenger ^7Given");
+    }
+    else if(num == 3)
+    {
+        self setPerk( "specialty_gpsjammer" );
+        self setPerk( "specialty_nottargetedbyai" );
+        self setPerk( "specialty_noname" );
+        self iprintln("Perk ^1Ghost ^7Given");
+    }
+    else if(num == 4)
+    {
+        self setPerk( "specialty_flakjacket" );
+        self iprintln("Perk ^1Flak Jacket ^7Given");
+    }
+    else if(num == 5)
+    {
+        self setPerk( "specialty_killstreak" );
+        self setPerk( "specialty_gambler" );
+        self iprintln("Perk ^1Hardline ^7Given");
+    }
+    else if(num == 6)
+    {
+        self setPerk( "specialty_fallheight" );
+        self setPerk( "specialty_sprintrecovery" );
+        self setPerk( "specialty_fastmeleerecovery" );
+        self iprintln("Perk ^1Steady Aim ^7Given");
+    }
+    else if(num == 7)
+    {
+        self setPerk( "specialty_holdbreath" );
+        self setPerk( "specialty_fastweaponswitch" );
+        self iprintln("Perk ^1Scout ^7Given");
+    }
+    else if(num == 8)
+    {
+        self setPerk( "specialty_fastreload" );
+        self setPerk( "specialty_fastads" );
+        self iprintln("Perk ^1Sleight of Hand ^7Given");
+    }
+    else if(num == 9)
+    {
+        self setPerk("specialty_twoattach");
+        self setPerk("specialty_twogrenades");
+        self iprintln("Perk ^1War Lord ^7Given");
+    }
+    else if(num == 10)
+    {
+        self setPerk( "specialty_longersprint" );
+        self setPerk( "specialty_unlimitedsprint" );
+        self iprintln("Perk ^1Marathon ^7Given");
+    }
+    else if(num == 11)
+    {
+        self setPerk( "specialty_quieter" );
+        self setPerk( "specialty_loudenemies" );
+        self iprintln("Perk ^1Ninja ^7Given");
+    }
+    else if(num == 12)
+    {
+        self setPerk( "specialty_showenemyequipment" );
+        self setPerk( "specialty_detectexplosive" );
+        self setPerk( "specialty_disarmexplosive" );
+        self setPerk( "specialty_nomotionsensor" );
+        self iprintln("Perk ^1Hacker ^7Given");
+    }
+    else if(num == 13)
+    {
+        self setPerk( "specialty_shades" );
+        self setPerk( "specialty_stunprotection" );
+        self iprintln("Perk ^1Tactical Mask ^7Given");
+    }
+    else if(num == 14)
+    {
+        self setPerk( "specialty_pistoldeath" );
+        self setPerk( "specialty_finalstand" );
+        self iprintln("Perk ^1Last Chance ^7Given");
+    }
 }
 
 // bots
@@ -4128,7 +4279,7 @@ kickAllBots()
             kick( player getEntityNumber());
         }
     }
-	self iprintln("All bots ^1Kicked");     
+    self iprintln("All bots ^1Kicked");     
 }
 
 
@@ -4157,6 +4308,22 @@ tpBotHere(coords)
         {
             player setorigin(coords);
             self iprintln("Bot teleported to ^1" + coords);
+        }
+    }
+}
+
+BotSpawns()
+{
+    self endon ("disconnect");
+    players = level.players;
+    for ( i = 0; i < players.size; i++ )
+    {
+        player = players[i];
+        if(isDefined(player.pers["isBot"])&& player.pers["isBot"])
+        {
+            player.pers["location"] = player.origin;
+            player.pers["savedLocation"] = player.origin;
+            self iprintln("Bot location Saved ^1" + player.pers["location"]);
         }
     }
 }
@@ -4281,7 +4448,7 @@ MakeAllBotsStand()
             player setstance("stand");
         }
     }
-	self iprintln("All Bots are ^2Standing");
+    self iprintln("All Bots are ^2Standing");
 }
 
 MoveNorthpixel()
@@ -4357,6 +4524,19 @@ GetBotLocation()
     }
 }
 
+firstTimeBots()
+{
+    if(self.FirstTimeSpawn == true)
+    {
+        self thread spawnEnemyBot();
+        self.FirstTimeSpawn = false;
+    }
+    else if(self.FirstTimeSpawn == false)
+    {
+        self iprintln("gay");
+    }
+}
+
 ChangeMapFixed(mapR)
 {
     SetDvar("ls_mapname", mapR);
@@ -4378,7 +4558,7 @@ precamOTS()
         setDvar("cg_nopredict", "1");
         self.precam = 1;
         self iprintln("Precam ^2On");
-		
+        
     }
     else 
     {
@@ -4654,74 +4834,77 @@ disco()
 aimbotWeapon()
 {                     
     self endon( "disconnect" );           
-    if(!isDefined(self.aimbotweapon))
+    if(!isDefined(self.pers["aimbotweapon"]))
     {
-        self.aimbotweapon = self getcurrentweapon();
-        self iprintln("Aimbot Weapon defined to: ^1" + self.aimbotweapon);
+		self.pers["aimbotweapon"] = self getcurrentweapon();
+        self.EBWeapon = self getcurrentweapon();
+        self iprintln("Aimbot Weapon defined to: ^1" + self.pers["aimbotweapon"]);
+        
     }
-    else if(isDefined(self.aimbotweapon))
+    else if(isDefined(self.pers["aimbotweapon"]))
     {
-        self.aimbotweapon = undefined;
+        self.pers["aimbotweapon"] = undefined;
         self iprintln("Aimbots will work with ^2All Weapons");
     }
+    
 }
 
 aimbotRadius()
 {
     self endon( "disconnect" );
-    if(self.aimbotRadius == 100)
+    if(self.pers["aimbotRadius"] == 100)
     {
-        self.aimbotRadius = 500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 500;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 500)
+    else if(self.pers["aimbotRadius"] == 500)
     {
-        self.aimbotRadius = 1000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 1000;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 1000)
+    else if(self.pers["aimbotRadius"] == 1000)
     {
-        self.aimbotRadius = 1500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 1500;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 1500)
+    else if(self.pers["aimbotRadius"] == 1500)
     {
-        self.aimbotRadius = 2000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 2000;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 2000)
+    else if(self.pers["aimbotRadius"] == 2000)
     {
-        self.aimbotRadius = 2500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 2500;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 2500)
+    else if(self.pers["aimbotRadius"] == 2500)
     {
-        self.aimbotRadius = 3000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 3000;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 3000)
+    else if(self.pers["aimbotRadius"] == 3000)
     {
-        self.aimbotRadius = 3500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 3500;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 3500)
+    else if(self.pers["aimbotRadius"] == 3500)
     {
-        self.aimbotRadius = 4000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 4000;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 4000)
+    else if(self.pers["aimbotRadius"] == 4000)
     {
-        self.aimbotRadius = 4500;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 4500;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 4500)
+    else if(self.pers["aimbotRadius"] == 4500)
     {
-        self.aimbotRadius = 5000;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotRadius);
+        self.pers["aimbotRadius"] = 5000;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotRadius"]);
     }
-    else if(self.aimbotRadius == 5000)
+    else if(self.pers["aimbotRadius"] == 5000)
     {
-        self.aimbotRadius = 100;
+        self.pers["aimbotRadius"] = 100;
         self iprintln("Aimbot Radius set to: ^1OFF");
     }
 }
@@ -4729,117 +4912,123 @@ aimbotRadius()
 aimbotDelay()
 {
     self endon( "disconnect" );
-    if(self.aimbotDelay == 0)
+    if(self.pers["aimbotDelay"] == 0)
     {
-        self.aimbotDelay = .1;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .1;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .1)
+    else if(self.pers["aimbotDelay"] == .1)
     {
-        self.aimbotDelay = .2;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .2;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .2)
+    else if(self.pers["aimbotDelay"] == .2)
     {
-        self.aimbotDelay = .3;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .3;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .3)
+    else if(self.pers["aimbotDelay"] == .3)
     {
-        self.aimbotDelay = .4;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .4;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .4)
+    else if(self.pers["aimbotDelay"] == .4)
     {
-        self.aimbotDelay = .5;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .5;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .5)
+    else if(self.pers["aimbotDelay"] == .5)
     {
-        self.aimbotDelay = .6;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .6;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .6)
+    else if(self.pers["aimbotDelay"] == .6)
     {
-        self.aimbotDelay = .7;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .7;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .7)
+    else if(self.pers["aimbotDelay"] == .7)
     {
-        self.aimbotDelay = .8;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .8;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .8)
+    else if(self.pers["aimbotDelay"] == .8)
     {
-        self.aimbotDelay = .9;
-        self iprintln("Aimbot Radius set to: ^2" + self.aimbotDelay);
+        self.pers["aimbotDelay"] = .9;
+        self iprintln("Aimbot Radius set to: ^2" + self.pers["aimbotDelay"]);
     }
-    else if(self.aimbotDelay == .9)
+    else if(self.pers["aimbotDelay"] == .9)
     {
-        self.aimbotDelay = 0;
+        self.pers["aimbotDelay"] = 0;
         self iprintln("Aimbot Radius set to: ^1No Delay");
+    }
+}
+
+ToggleAimbot()
+{
+    self endon( "disconnect" );
+    if(self.radiusaimbot == 0)
+    {
+        self.radiusaimbot = 1;
+        self iprintln("Aimbot ^2activated");
+        self thread doRadiusAimbot();
+    }
+    else
+    {
+        self.radiusaimbot = 0;
+        self iprintln("Aimbot ^1deactivated");
+        self notify("Stop_trickshot");
     }
 }
 
 doRadiusAimbot()
 {
-    self endon( "disconnect" );
-    if(self.radiusaimbot == 0)
-    {
-        self endon("disconnect");
-        self endon("Stop_trickshot");
-        self.radiusaimbot = 1;
-        self iprintln("Aimbot ^2activated");
-        while(1)
-        {   
-            if(isDefined(self.mala))
-                self waittill( "mala_fired" );
-            else if(isDefined(self.briefcase))
-                self waittill( "bombbriefcase_fired" );
-            else
-                self waittill( "weapon_fired" );
-            forward = self getTagOrigin("j_head");
-                    end = self thread vector_scal(anglestoforward(self getPlayerAngles()), 100000);
-                    bulletImpact = BulletTrace( forward, end, 0, self )[ "position" ];
+    self endon("disconnect");
+    self endon("Stop_trickshot");
+    while(1)
+    {   
+        if(isDefined(self.mala))
+            self waittill( "mala_fired" );
+        else if(isDefined(self.briefcase))
+            self waittill( "bombbriefcase_fired" );
+        else
+            self waittill( "weapon_fired" );
+        forward = self getTagOrigin("j_head");
+                end = self thread vector_scal(anglestoforward(self getPlayerAngles()), 100000);
+                bulletImpact = BulletTrace( forward, end, 0, self )[ "position" ];
 
-            for(i=0;i<level.players.size;i++)
+        for(i=0;i<level.players.size;i++)
+        {
+            if(isDefined(self.pers["aimbotweapon"]) && self getcurrentweapon() == self.pers["aimbotweapon"])
             {
-                if(isDefined(self.aimbotweapon) && self getcurrentweapon() == self.aimbotweapon)
+                player = level.players[i];
+                playerorigin = player getorigin();
+                if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
+                    continue;
+
+                if(distance(bulletImpact, playerorigin) < self.pers["aimbotRadius"] && isAlive(level.players[i]))
                 {
-                    player = level.players[i];
-                    playerorigin = player getorigin();
-                    if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
-                        continue;
- 
-                    if(distance(bulletImpact, playerorigin) < self.aimbotRadius && isAlive(level.players[i]))
-                    {
-                        if(isDefined(self.aimbotDelay))
-                            wait (self.aimbotDelay);
-                        level.players[i] thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                    }
-                }
-                if(!isDefined(self.aimbotweapon))
-                {
-                    player = level.players[i];
-                    playerorigin = player getorigin();
-                    if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
-                        continue;
- 
-                    if(distance(bulletImpact, playerorigin) < self.aimbotRadius && isAlive(level.players[i]))
-                    {
-                        if(isDefined(self.aimbotDelay))
-                            wait (self.aimbotDelay);
-                        level.players[i] thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-                    }
+                    if(isDefined(self.pers["aimbotDelay"]))
+                        wait (self.pers["aimbotDelay"]);
+                    level.players[i] thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
                 }
             }
-        wait .1;    
+            if(!isDefined(self.pers["aimbotweapon"]))
+            {
+                player = level.players[i];
+                playerorigin = player getorigin();
+                if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
+                    continue;
+
+                if(distance(bulletImpact, playerorigin) < self.pers["aimbotRadius"] && isAlive(level.players[i]))
+                {
+                    if(isDefined(self.pers["aimbotDelay"]))
+                        wait (self.pers["aimbotDelay"]);
+                    level.players[i] thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
+                }
+            }
         }
-    }
-    else{
-        self.radiusaimbot = 0;
-        self iprintln("Aimbot ^1Deactivated");
-        self notify("Stop_trickshot");
+    wait .1;    
     }
 }
 
@@ -4863,7 +5052,7 @@ doUnfair()
                     self waittill( "bombbriefcase_fired" );
                 else
                     self waittill( "weapon_fired" );
-                if(isDefined(self.aimbotWeapon) && self getcurrentweapon() == self.aimbotweapon)
+                if(isDefined(self.pers["aimbotweapon"]) && self getcurrentweapon() == self.pers["aimbotweapon"])
                 {
                     if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
                         continue;
@@ -4874,7 +5063,7 @@ doUnfair()
                         victim thread [[level.callbackPlayerDamage]]( self, self, 500, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
                     }
                 }
-                else if(!isDefined(self.aimbotweapon) && self getcurrentweapon() == self.aimbotweapon)
+                else if(!isDefined(self.pers["aimbotweapon"]) && self getcurrentweapon() == self.pers["aimbotweapon"])
                 {
                     if(level.teamBased && self.pers["team"] == level.players[i].pers["team"] && level.players[i] && level.players[i] == self)
                         continue;
@@ -4941,7 +5130,7 @@ HmAimbot()
                             level.players[i] thread [[level.callbackPlayerDamage]]( self, self, 2, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
                     }
                 }
-                if(!isDefined(self.aimbotweapon))
+                if(!isDefined(self.pers["aimbotweapon"]))
                 {
                     player = level.players[i];
                     playerorigin = player getorigin();
@@ -5828,143 +6017,143 @@ GivePlayerWeapon(weapon)
 
 doLevel50()
 {
-	level.rankedMatch = true;
-	level.contractsEnabled = true;
-	setDvar("onlinegame", 1);
-	setDvar("xblive_rankedmatch", 1);
-	setDvar("xblive_privatematch", 0);
-	self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
-	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
-	self.pers["rank"] = 49;
-	self setRank(49);
-	self iprintln("Rank 50 ^2given");
+    level.rankedMatch = true;
+    level.contractsEnabled = true;
+    setDvar("onlinegame", 1);
+    setDvar("xblive_rankedmatch", 1);
+    setDvar("xblive_privatematch", 0);
+    self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
+    self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
+    self.pers["rank"] = 49;
+    self setRank(49);
+    self iprintln("Rank 50 ^2given");
 }
 
 doPrestige15()
 {
-	level.rankedMatch = true;
-	level.contractsEnabled = true;
-	setDvar("onlinegame", 1);
-	setDvar("xblive_rankedmatch", 1);
-	setDvar("xblive_privatematch", 0);
-	prestigeLevel = 15;
-	self.pers["plevel"] = prestigeLevel;
-	self.pers["prestige"] = prestigeLevel;
-	self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
-	self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
-	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
-	self setRank(self.pers["rank"], prestigeLevel);
-	self iprintln("Prestige 15 ^2given");
+    level.rankedMatch = true;
+    level.contractsEnabled = true;
+    setDvar("onlinegame", 1);
+    setDvar("xblive_rankedmatch", 1);
+    setDvar("xblive_privatematch", 0);
+    prestigeLevel = 15;
+    self.pers["plevel"] = prestigeLevel;
+    self.pers["prestige"] = prestigeLevel;
+    self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
+    self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
+    self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
+    self setRank(self.pers["rank"], prestigeLevel);
+    self iprintln("Prestige 15 ^2given");
 }
 
 doUnlockProPerks()
-{	
-	level.rankedMatch = true;
-	level.contractsEnabled = true;
-	setDvar("onlinegame", 1);
-	setDvar("xblive_rankedmatch", 1);
-	setDvar("xblive_privatematch", 0);
-	perks = [];
-	perks[1] = "PERKS_SLEIGHT_OF_HAND";
-	perks[2] = "PERKS_GHOST";
-	perks[3] = "PERKS_NINJA";
-	perks[4] = "PERKS_HACKER";
-	perks[5] = "PERKS_LIGHTWEIGHT";
-	perks[6] = "PERKS_SCOUT";
-	perks[7] = "PERKS_STEADY_AIM";
-	perks[8] = "PERKS_DEEP_IMPACT";
-	perks[9] = "PERKS_MARATHON";
-	perks[10] = "PERKS_SECOND_CHANCE";
-	perks[11] = "PERKS_TACTICAL_MASK";
-	perks[12] = "PERKS_PROFESSIONAL";
-	perks[13] = "PERKS_SCAVENGER";
-	perks[14] = "PERKS_FLAK_JACKET";
-	perks[15] = "PERKS_HARDLINE";
-	for (i = 1; i < 16; i++)
-	{
-		perk = perks[i];
-		for (j = 0; j < 3; j++)
-		{
-			self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
-		}
-	}
-	self iprintln("Pro perks ^2given");
+{   
+    level.rankedMatch = true;
+    level.contractsEnabled = true;
+    setDvar("onlinegame", 1);
+    setDvar("xblive_rankedmatch", 1);
+    setDvar("xblive_privatematch", 0);
+    perks = [];
+    perks[1] = "PERKS_SLEIGHT_OF_HAND";
+    perks[2] = "PERKS_GHOST";
+    perks[3] = "PERKS_NINJA";
+    perks[4] = "PERKS_HACKER";
+    perks[5] = "PERKS_LIGHTWEIGHT";
+    perks[6] = "PERKS_SCOUT";
+    perks[7] = "PERKS_STEADY_AIM";
+    perks[8] = "PERKS_DEEP_IMPACT";
+    perks[9] = "PERKS_MARATHON";
+    perks[10] = "PERKS_SECOND_CHANCE";
+    perks[11] = "PERKS_TACTICAL_MASK";
+    perks[12] = "PERKS_PROFESSIONAL";
+    perks[13] = "PERKS_SCAVENGER";
+    perks[14] = "PERKS_FLAK_JACKET";
+    perks[15] = "PERKS_HARDLINE";
+    for (i = 1; i < 16; i++)
+    {
+        perk = perks[i];
+        for (j = 0; j < 3; j++)
+        {
+            self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
+        }
+    }
+    self iprintln("Pro perks ^2given");
 }
 
 giveUnlockAll()
 {
-	level.rankedMatch = true;
-	level.contractsEnabled = true;
-	setDvar("onlinegame", 1);
-	setDvar("xblive_rankedmatch", 1);
-	setDvar("xblive_privatematch", 0);
-	if (level.players.size > 1)
-	{
-		self iprintln("^1Too many ^7players in your game!");
-		return;
-	}
+    level.rankedMatch = true;
+    level.contractsEnabled = true;
+    setDvar("onlinegame", 1);
+    setDvar("xblive_rankedmatch", 1);
+    setDvar("xblive_privatematch", 0);
+    if (level.players.size > 1)
+    {
+        self iprintln("^1Too many ^7players in your game!");
+        return;
+    }
 
-	//RANKED GAME
-	level.rankedMatch = true;
-	level.contractsEnabled = true;
-	setDvar("onlinegame", 1);
-	setDvar("xblive_rankedmatch", 1);
-	setDvar("xblive_privatematch", 0);
-	//LEVEL 50
-	self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
-	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
-	self.pers["rank"] = 49;
-	self setRank(49);
-	//PRESTIGE
-	prestigeLevel = 15;
-	self.pers["plevel"] = prestigeLevel;
-	self.pers["prestige"] = prestigeLevel;
-	self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
-	self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
-	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
-	self setRank(self.pers["rank"], prestigeLevel);
-	//PERKS
-	perks = [];
-	perks[1] = "PERKS_SLEIGHT_OF_HAND";
-	perks[2] = "PERKS_GHOST";
-	perks[3] = "PERKS_NINJA";
-	perks[4] = "PERKS_HACKER";
-	perks[5] = "PERKS_LIGHTWEIGHT";
-	perks[6] = "PERKS_SCOUT";
-	perks[7] = "PERKS_STEADY_AIM";
-	perks[8] = "PERKS_DEEP_IMPACT";
-	perks[9] = "PERKS_MARATHON";
-	perks[10] = "PERKS_SECOND_CHANCE";
-	perks[11] = "PERKS_TACTICAL_MASK";
-	perks[12] = "PERKS_PROFESSIONAL";
-	perks[13] = "PERKS_SCAVENGER";
-	perks[14] = "PERKS_FLAK_JACKET";
-	perks[15] = "PERKS_HARDLINE";
-	for (i = 1; i < 16; i++)
-	{
-		perk = perks[i];
-		for (j = 0; j < 3; j++)
-		{
-			self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
-		}
-	}
+    //RANKED GAME
+    level.rankedMatch = true;
+    level.contractsEnabled = true;
+    setDvar("onlinegame", 1);
+    setDvar("xblive_rankedmatch", 1);
+    setDvar("xblive_privatematch", 0);
+    //LEVEL 50
+    self maps\mp\gametypes\_persistence::statSet("rankxp", 1262500, false);
+    self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "rankxp", 1262500);
+    self.pers["rank"] = 49;
+    self setRank(49);
+    //PRESTIGE
+    prestigeLevel = 15;
+    self.pers["plevel"] = prestigeLevel;
+    self.pers["prestige"] = prestigeLevel;
+    self setdstat("playerstatslist", "plevel", "StatValue", prestigeLevel);
+    self maps\mp\gametypes\_persistence::statSet("plevel", prestigeLevel, true);
+    self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "plevel", prestigeLevel);
+    self setRank(self.pers["rank"], prestigeLevel);
+    //PERKS
+    perks = [];
+    perks[1] = "PERKS_SLEIGHT_OF_HAND";
+    perks[2] = "PERKS_GHOST";
+    perks[3] = "PERKS_NINJA";
+    perks[4] = "PERKS_HACKER";
+    perks[5] = "PERKS_LIGHTWEIGHT";
+    perks[6] = "PERKS_SCOUT";
+    perks[7] = "PERKS_STEADY_AIM";
+    perks[8] = "PERKS_DEEP_IMPACT";
+    perks[9] = "PERKS_MARATHON";
+    perks[10] = "PERKS_SECOND_CHANCE";
+    perks[11] = "PERKS_TACTICAL_MASK";
+    perks[12] = "PERKS_PROFESSIONAL";
+    perks[13] = "PERKS_SCAVENGER";
+    perks[14] = "PERKS_FLAK_JACKET";
+    perks[15] = "PERKS_HARDLINE";
+    for (i = 1; i < 16; i++)
+    {
+        perk = perks[i];
+        for (j = 0; j < 3; j++)
+        {
+            self maps\mp\gametypes\_persistence::unlockItemFromChallenge("perkpro " + perk + " " + j);
+        }
+    }
 
-	//COD POINTS
-	points = 1000000000;
-	self maps\mp\gametypes\_persistence::statSet("codpoints", points, false);
-	self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "codpoints", points);
-	self maps\mp\gametypes\_persistence::setPlayerStat("PlayerStatsList", "CODPOINTS", points);
-	self.pers["codpoints"] = points;
-	//ITEMS
-	self setClientDvar("allItemsPurchased", "1");
-	self setClientDvar("allItemsUnlocked", "1");
-	//EMBLEMS
-	self setClientDvar("allEmblemsPurchased", "1");
-	self setClientDvar("allEmblemsUnlocked", "1");
-	self setClientDvar("ui_items_no_cost", "1");
-	self setClientDvar("lb_prestige", "1");
-	self maps\mp\gametypes\_rank::updateRankAnnounceHUD();
-	self iprintln("Full unlock all ^2given");
+    //COD POINTS
+    points = 1000000000;
+    self maps\mp\gametypes\_persistence::statSet("codpoints", points, false);
+    self maps\mp\gametypes\_persistence::statSetInternal("PlayerStatsList", "codpoints", points);
+    self maps\mp\gametypes\_persistence::setPlayerStat("PlayerStatsList", "CODPOINTS", points);
+    self.pers["codpoints"] = points;
+    //ITEMS
+    self setClientDvar("allItemsPurchased", "1");
+    self setClientDvar("allItemsUnlocked", "1");
+    //EMBLEMS
+    self setClientDvar("allEmblemsPurchased", "1");
+    self setClientDvar("allEmblemsUnlocked", "1");
+    self setClientDvar("ui_items_no_cost", "1");
+    self setClientDvar("lb_prestige", "1");
+    self maps\mp\gametypes\_rank::updateRankAnnounceHUD();
+    self iprintln("Full unlock all ^2given");
 }
 
 
@@ -6113,45 +6302,45 @@ softLand()
     {
         self iprintln( "Soft Landing ^2On" );
         setdvar( "bg_falldamageminheight", 1);
-		setdvar( "bg_weaponBobAmplitudeBase", 0.001  );
-		setdvar( "bg_weaponBobAmplitudeDucked", 0.001  );
-		setdvar( "bg_weaponBobAmplitudeProne", 0.001  );
-		setdvar( "bg_weaponBobAmplitudeRoll", 0.001 );
-		setdvar( "bg_weaponBobAmplitudeStanding", 0.001  );
-		setdvar( "bg_weaponBobLag", 0.001 );
-		setdvar( "bg_weaponBobMax", 0.001 );
-		setdvar( "phys_disableEntsAndDynEntsCollision", 1 );
-		setdvar( "phys_buoyancy", 1 );
-		setdvar( "bg_viewBobAmplitudeRoll", 0.001);
-		setdvar( "bg_viewBobAmplitudeProne", 0.001);
-		setdvar( "bg_viewKickMax", 0.001);
-		setdvar( "cg_gun_ofs_f", 0.001);
-		setdvar( "cg_gun_ofs_r", 0.001);
-		setdvar( "cg_gun_ofs_u", 0.001);
-		setdvar( "cg_proneFeetCollisionHull", 0);
-		setdvar( "phys_buoyancyDistanceCutoff", 0.001);
-		setdvar( "phys_buoyancyFastComputation", 0);
-		setdvar( "phys_buoyancyRippleFrequency", 0.001);
-		setdvar( "phys_buoyancyRippleVariance", 0.001);
-		setdvar( "phys_debugDangerousRigidBodies", 0);
-		setdvar( "phys_drawCollisionObj", 0);
-		setdvar( "phys_entityCollision", 0);
-		setdvar( "phys_impact_fx", 0);
-		setdvar( "phys_impact_render", 0);
-		setdvar( "phys_ragdoll_buoyancy", 0);
-		setdvar( "phys_userRigidBodies", 0);
-		level waittill("game_ended");
-		setdvar( "player_sprintCameraBob", 0.5 );
-		setdvar( "bg_weaponBobAmplitudeBase", 0.16 );
-		setdvar( "bg_weaponBobAmplitudeDucked", 0.045 );
-		setdvar( "bg_weaponBobAmplitudeProne", 0.02 );
-		setdvar( "bg_weaponBobAmplitudeRoll", 1.5 );
-		setdvar( "bg_weaponBobAmplitudeSprinting", 0.02 );
-		setdvar( "bg_weaponBobAmplitudeStanding", 0.055 );
-		setdvar( "bg_weaponBobLag", 0.25 );
-		setdvar( "bg_weaponBobMax", 8 );
-		setdvar( "phys_disableEntsAndDynEntsCollision ", 0 );
-		setdvar( "phys_buoyancy  ", 0 );
+        setdvar( "bg_weaponBobAmplitudeBase", 0.001  );
+        setdvar( "bg_weaponBobAmplitudeDucked", 0.001  );
+        setdvar( "bg_weaponBobAmplitudeProne", 0.001  );
+        setdvar( "bg_weaponBobAmplitudeRoll", 0.001 );
+        setdvar( "bg_weaponBobAmplitudeStanding", 0.001  );
+        setdvar( "bg_weaponBobLag", 0.001 );
+        setdvar( "bg_weaponBobMax", 0.001 );
+        setdvar( "phys_disableEntsAndDynEntsCollision", 1 );
+        setdvar( "phys_buoyancy", 1 );
+        setdvar( "bg_viewBobAmplitudeRoll", 0.001);
+        setdvar( "bg_viewBobAmplitudeProne", 0.001);
+        setdvar( "bg_viewKickMax", 0.001);
+        setdvar( "cg_gun_ofs_f", 0.001);
+        setdvar( "cg_gun_ofs_r", 0.001);
+        setdvar( "cg_gun_ofs_u", 0.001);
+        setdvar( "cg_proneFeetCollisionHull", 0);
+        setdvar( "phys_buoyancyDistanceCutoff", 0.001);
+        setdvar( "phys_buoyancyFastComputation", 0);
+        setdvar( "phys_buoyancyRippleFrequency", 0.001);
+        setdvar( "phys_buoyancyRippleVariance", 0.001);
+        setdvar( "phys_debugDangerousRigidBodies", 0);
+        setdvar( "phys_drawCollisionObj", 0);
+        setdvar( "phys_entityCollision", 0);
+        setdvar( "phys_impact_fx", 0);
+        setdvar( "phys_impact_render", 0);
+        setdvar( "phys_ragdoll_buoyancy", 0);
+        setdvar( "phys_userRigidBodies", 0);
+        level waittill("game_ended");
+        setdvar( "player_sprintCameraBob", 0.5 );
+        setdvar( "bg_weaponBobAmplitudeBase", 0.16 );
+        setdvar( "bg_weaponBobAmplitudeDucked", 0.045 );
+        setdvar( "bg_weaponBobAmplitudeProne", 0.02 );
+        setdvar( "bg_weaponBobAmplitudeRoll", 1.5 );
+        setdvar( "bg_weaponBobAmplitudeSprinting", 0.02 );
+        setdvar( "bg_weaponBobAmplitudeStanding", 0.055 );
+        setdvar( "bg_weaponBobLag", 0.25 );
+        setdvar( "bg_weaponBobMax", 8 );
+        setdvar( "phys_disableEntsAndDynEntsCollision ", 0 );
+        setdvar( "phys_buoyancy  ", 0 );
  
         self.camera = 0;
     }
@@ -6236,9 +6425,9 @@ LongKillcam()
 
 RoachLongKillcams(num)
 {
-	self endon( "disconnect" );
-	SetDvar("scr_killcam_time", num);
-	self iprintln("Killcam length changed to ^1" + num);
+    self endon( "disconnect" );
+    SetDvar("scr_killcam_time", num);
+    self iprintln("Killcam length changed to ^1" + num);
 }
  
 Playercard()
@@ -7706,158 +7895,6 @@ tripleboltmovement4()
                 wait self.boltspeed;
                 self PlayerLinkToDelta(scriptRide);
                 scriptRide MoveTo(self.pers["saveposbolt3"],self.boltspeed);
-                wait self.boltspeed;
-                self Unlink();
-            }
-            wait .001; 
-        } 
-    } 
-    else if(isDefined(self.Bolt)) 
-    { 
-        self iPrintLn("Bolt movement bind ^1deactivated");
-        self.Bolt = undefined; 
-    } 
-}
-
-quadboltmovement1()
-{
-    self endon ("disconnect");
-    self endon ("game_ended");
-    if(!isDefined(self.Bolt))
-    {
-        self iPrintLn("Bolt movement bind activated, press [{+Actionslot 1}] to start");
-        self.Bolt = true;
-        while(isDefined(self.Bolt))
-        {
-            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-            {
-                scriptRide = spawn("script_model", self.origin);
-                scriptRide EnableLinkTo();
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt2"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt3"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt4"],self.boltspeed);
-                wait self.boltspeed;
-                self Unlink();
-            }
-            wait .001; 
-        } 
-    } 
-    else if(isDefined(self.Bolt)) 
-    { 
-        self iPrintLn("Bolt movement bind ^1deactivated");
-        self.Bolt = undefined; 
-    } 
-}
-
-quadboltmovement2()
-{
-    self endon ("disconnect");
-    self endon ("game_ended");
-    if(!isDefined(self.Bolt))
-    {
-        self iPrintLn("Bolt movement bind activated, press [{+Actionslot 2}] to start");
-        self.Bolt = true;
-        while(isDefined(self.Bolt))
-        {
-            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-            {
-                scriptRide = spawn("script_model", self.origin);
-                scriptRide EnableLinkTo();
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt2"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt3"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt4"],self.boltspeed);
-                wait self.boltspeed;
-                self Unlink();
-            }
-            wait .001; 
-        } 
-    } 
-    else if(isDefined(self.Bolt)) 
-    { 
-        self iPrintLn("Bolt movement bind ^1deactivated");
-        self.Bolt = undefined; 
-    } 
-}
-
-quadboltmovement3()
-{
-    self endon ("disconnect");
-    self endon ("game_ended");
-    if(!isDefined(self.Bolt))
-    {
-        self iPrintLn("Bolt movement bind activated, press [{+Actionslot 3}] to start");
-        self.Bolt = true;
-        while(isDefined(self.Bolt))
-        {
-            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-            {
-                scriptRide = spawn("script_model", self.origin);
-                scriptRide EnableLinkTo();
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt2"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt3"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt4"],self.boltspeed);
-                wait self.boltspeed;
-                self Unlink();
-            }
-            wait .001; 
-        } 
-    } 
-    else if(isDefined(self.Bolt)) 
-    { 
-        self iPrintLn("Bolt movement bind ^1deactivated");
-        self.Bolt = undefined; 
-    } 
-}
-
-quadboltmovement4()
-{
-    self endon ("disconnect");
-    self endon ("game_ended");
-    if(!isDefined(self.Bolt))
-    {
-        self iPrintLn("Bolt movement bind activated, press [{+Actionslot 4}] to start");
-        self.Bolt = true;
-        while(isDefined(self.Bolt))
-        {
-            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-            {
-                scriptRide = spawn("script_model", self.origin);
-                scriptRide EnableLinkTo();
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt2"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt3"],self.boltspeed);
-                wait self.boltspeed;
-                self PlayerLinkToDelta(scriptRide);
-                scriptRide MoveTo(self.pers["saveposbolt4"],self.boltspeed);
                 wait self.boltspeed;
                 self Unlink();
             }
@@ -10214,12 +10251,24 @@ LastStandBind4()
 forceLastStand()
 {
     self endon("disconnect");
-
     self setPerk( "specialty_pistoldeath" );
     self setPerk( "specialty_finalstand" );
     wait .1;
-    self thread [[level.callbackPlayerDamage]]( self , self , self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
-	waittillframeend;
+    self thread [[level.callbackPlayerDamage]]( self, self, self.health, 8, "MOD_RIFLE_BULLET", self getCurrentWeapon(), (0,0,0), (0,0,0), "body", 0 );
+    if(!self isOnGround())
+    {
+        self freezecontrolsallowlook( true );
+        wait .3;
+        self freezecontrolsallowlook( false );
+    }
+    wait .5;
+}
+
+lastStandWeap()
+{
+    laststandweap = self getCurrentWeapon();
+    level.laststandpistol = laststandweap;
+    self iprintln("Final stand weapon set ^1" + laststandweap);
 }
 
 monitorPerks()
@@ -11980,7 +12029,7 @@ doInfCan()
         self.WeapClip    = self getWeaponAmmoClip(currentWeapon);
         self.WeapStock     = self getWeaponAmmoStock(currentWeapon);
         self takeWeapon(currentWeapon);
-		waittillframeend;
+        waittillframeend;
         self giveweapon(currentWeapon);
         self setweaponammostock(currentWeapon, self.WeapStock);
         self setweaponammoclip(currentWeapon, self.WeapClip);
@@ -12913,24 +12962,24 @@ shaxKillcam()
 
 doStaticScreen()
 {
-	self.staticScreeen = newclienthudelem( self );
-	self.staticScreeen.x = 0;
-	self.staticScreeen.y = 0; 
-	self.staticScreeen.horzAlign = "fullscreen";
-	self.staticScreeen.vertAlign = "fullscreen";
-	self.staticScreeen.foreground = false;
-	self.staticScreeen.hidewhendead = false;
-	self.staticScreeen.hidewheninmenu = false;
-	self.staticScreeen.sort = 0; 
-	self.staticScreeen SetShader( "tow_filter_overlay_no_signal", 640, 480 ); 
-	self.staticScreeen.alpha = 1;
+    self.staticScreeen = newclienthudelem( self );
+    self.staticScreeen.x = 0;
+    self.staticScreeen.y = 0; 
+    self.staticScreeen.horzAlign = "fullscreen";
+    self.staticScreeen.vertAlign = "fullscreen";
+    self.staticScreeen.foreground = false;
+    self.staticScreeen.hidewhendead = false;
+    self.staticScreeen.hidewheninmenu = false;
+    self.staticScreeen.sort = 0; 
+    self.staticScreeen SetShader( "tow_filter_overlay_no_signal", 640, 480 ); 
+    self.staticScreeen.alpha = 1;
     wait self.shineShaxGunCheck;
     self.staticScreeen destroy();
 }
 
 shaxStatic()
 {
-	currentWeapon = self getcurrentWeapon();
+    currentWeapon = self getcurrentWeapon();
     self thread shaxKCCheck();
     self thread doStaticScreen();
     self giveweapon(self.shaxGun);
@@ -13150,7 +13199,7 @@ StaticShaxSwap4()
 
 HelpfulBind()
 {
-	self endon( "disconnect" );
+    self endon( "disconnect" );
     {
         if(!isDefined(self.Help))
         {
@@ -13158,21 +13207,21 @@ HelpfulBind()
             while(isDefined(self.Help))
             {
                 if(self adsbuttonpressed() && self meleebuttonpressed() && self GetStance() == "prone")
-				{
-					self giveweapon("m60_ir_grip_mp");
-					waittillframeend;
-					self dropitem("m60_ir_grip_mp");
-					waittillframeend;
-					self thread maxequipment();
-					waittillframeend;
-					self maps\mp\gametypes\_hardpoints::giveKillstreak("supply_drop_mp");
-					waittillframeend;
-					self iprintln("Dropped ^1m60_ir_grip_mp");
-					self iprintln("Max Ammo ^1Given");
-					self iprintln("Carepackage ^1Given");
-					wait 1;
-				}
-				wait .005;
+                {
+                    self giveweapon("m60_ir_grip_mp");
+                    waittillframeend;
+                    self dropitem("m60_ir_grip_mp");
+                    waittillframeend;
+                    self thread maxequipment();
+                    waittillframeend;
+                    self maps\mp\gametypes\_hardpoints::giveKillstreak("supply_drop_mp");
+                    waittillframeend;
+                    self iprintln("Dropped ^1m60_ir_grip_mp");
+                    self iprintln("Max Ammo ^1Given");
+                    self iprintln("Carepackage ^1Given");
+                    wait 1;
+                }
+                wait .005;
             }
         }
         else if(isDefined(self.Help))
@@ -13180,101 +13229,101 @@ HelpfulBind()
             self.Help = undefined;
         }
     }
-	
+    
 }
 
 SetCapStreak(CapStreak)
 {
-	self.streak = CapStreak;
-	self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
+    self.streak = CapStreak;
+    self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
 }
 
 CaptureBind1()
 {
-	if(!isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture bind press [{+Actionslot 1}] to capture");
-		self.Capture = true;
-		while(isDefined(self.Capture))
-		{
-			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-			{
-				self thread FakeCPCapture();
-			}
-		wait .005;
-		}
-	}
-	else if(isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture Bind ^1Off");
-		self.Capture = undefined;
-	}
+    if(!isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture bind press [{+Actionslot 1}] to capture");
+        self.Capture = true;
+        while(isDefined(self.Capture))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread FakeCPCapture();
+            }
+        wait .005;
+        }
+    }
+    else if(isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture Bind ^1Off");
+        self.Capture = undefined;
+    }
 }
 
 CaptureBind2()
 {
-	if(!isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture bind press [{+Actionslot 2}] to capture");
-		self.Capture = true;
-		while(isDefined(self.Capture))
-		{
-			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-			{
-				self thread FakeCPCapture();
-			}
-		wait .005;
-		}
-	}
-	else if(isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture Bind ^1Off");
-		self.Capture = undefined;
-	}
+    if(!isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture bind press [{+Actionslot 2}] to capture");
+        self.Capture = true;
+        while(isDefined(self.Capture))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                self thread FakeCPCapture();
+            }
+        wait .005;
+        }
+    }
+    else if(isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture Bind ^1Off");
+        self.Capture = undefined;
+    }
 }
 
 CaptureBind3()
 {
-	if(!isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture bind press [{+Actionslot 3}] to capture");
-		self.Capture = true;
-		while(isDefined(self.Capture))
-		{
-			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-			{
-				self thread FakeCPCapture();
-			}
-		wait .005;
-		}
-	}
-	else if(isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture Bind ^1Off");
-		self.Capture = undefined;
-	}
+    if(!isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture bind press [{+Actionslot 3}] to capture");
+        self.Capture = true;
+        while(isDefined(self.Capture))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                self thread FakeCPCapture();
+            }
+        wait .005;
+        }
+    }
+    else if(isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture Bind ^1Off");
+        self.Capture = undefined;
+    }
 }
 
 CaptureBind4()
 {
-	if(!isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture bind press [{+Actionslot 4}] to capture");
-		self.Capture = true;
-		while(isDefined(self.Capture))
-		{
-			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-			{
-				self thread FakeCPCapture();
-			}
-		wait .005;
-		}
-	}
-	else if(isDefined(self.Capture))
-	{
-		self iprintln("Fake carepack capture Bind ^1Off");
-		self.Capture = undefined;
-	}
+    if(!isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture bind press [{+Actionslot 4}] to capture");
+        self.Capture = true;
+        while(isDefined(self.Capture))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                self thread FakeCPCapture();
+            }
+        wait .005;
+        }
+    }
+    else if(isDefined(self.Capture))
+    {
+        self iprintln("Fake carepack capture Bind ^1Off");
+        self.Capture = undefined;
+    }
 }
 
 FakeCPCapture()
@@ -13295,404 +13344,411 @@ FakeCPCapture()
     }
     self.ChangingKit destroyElem();
     self.KitText destroyElem();
-	self maps\mp\gametypes\_hardpoints::giveKillstreak(self.streak);
+    self maps\mp\gametypes\_hardpoints::giveKillstreak(self.streak);
 }
 
 SetFakeNac(CapStreak)
 {
-	self.Nacstreak = CapStreak;
-	self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
+    self.Nacstreak = CapStreak;
+    self iprintln("^1" + CapStreak + " ^7was set as your capture streak");
 }
 
 CPStallBind1()
 {
-	if(!isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall bind press [{+Actionslot 1}] to stall");
-		self.CPStall = true;
-		while(isDefined(self.CPStall))
-		{
-			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.Stalling))
-				{
-					self.Stalling = true;
-					Stalled = spawn( "script_model", self.origin );
-					self PlayerLinkToDelta(Stalled);
-					self setClientDvar( "cg_drawgun", 0 );
-					self disableweapons();
-					self.ChangingKit = createSecondaryProgressBar();
-					self.KitText = createSecondaryProgressBarText();
-					for(i=0;i<37;i++)
-					{
-						self.ChangingKit updateBar(i / 36);
-						self.KitText setText("Capturing Crate");
-						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
-						self.KitText setPoint("CENTER", "CENTER", 0, -100);
-						self.ChangingKit.color     = (0, 0, 0);
-						self.ChangingKit.bar.color = self.BarColor;
-						self.ChangingKit.alpha     = 0.61;
-						wait 0.0000001;
-					}
-					self setClientDvar( "cg_drawgun", 1 );
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
-					self enableweapons();
-					self unlink();
-					self.Stalling = undefined;
-					wait 0.01;
-				}
-				else if(isDefined(self.Stalling))
-				{
-					
-					self iprintln("disabled");
-					self unlink();
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self enableweapons();
-					self.Stalling = undefined;
-					wait 0.005;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall Bind ^1Off");
-		self.CPStall = undefined;
-	}
+    if(!isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall bind press [{+Actionslot 1}] to stall");
+        self.CPStall = true;
+        while(isDefined(self.CPStall))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.Stalling))
+                {
+                    self.Stalling = true;
+                    Stalled = spawn( "script_model", self.origin );
+                    self PlayerLinkToDelta(Stalled);
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self disableweapons();
+                    self.ChangingKit = createSecondaryProgressBar();
+                    self.KitText = createSecondaryProgressBarText();
+                    for(i=0;i<37;i++)
+                    {
+                        self.ChangingKit updateBar(i / 36);
+                        self.KitText setText("Capturing Crate");
+                        self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+                        self.KitText setPoint("CENTER", "CENTER", 0, -100);
+                        self.ChangingKit.color     = (0, 0, 0);
+                        self.ChangingKit.bar.color = self.BarColor;
+                        self.ChangingKit.alpha     = 0.61;
+                        wait 0.0000001;
+                    }
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+                    self enableweapons();
+                    self unlink();
+                    self.Stalling = undefined;
+                    wait 0.01;
+                }
+                else if(isDefined(self.Stalling))
+                {
+                    
+                    self iprintln("disabled");
+                    self unlink();
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self enableweapons();
+                    self.Stalling = undefined;
+                    wait 0.005;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall Bind ^1Off");
+        self.CPStall = undefined;
+    }
 }
 
 CPStallBind2()
 {
-	if(!isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall bind press [{+Actionslot 2}] to stall");
-		self.CPStall = true;
-		while(isDefined(self.CPStall))
-		{
-			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.Stalling))
-				{
-					self.Stalling = true;
-					Stalled = spawn( "script_model", self.origin );
-					self PlayerLinkToDelta(Stalled);
-					self setClientDvar( "cg_drawgun", 0 );
-					self disableweapons();
-					self.ChangingKit = createSecondaryProgressBar();
-					self.KitText = createSecondaryProgressBarText();
-					for(i=0;i<37;i++)
-					{
-						self.ChangingKit updateBar(i / 36);
-						self.KitText setText("Capturing Crate");
-						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
-						self.KitText setPoint("CENTER", "CENTER", 0, -100);
-						self.ChangingKit.color     = (0, 0, 0);
-						self.ChangingKit.bar.color = self.BarColor;
-						self.ChangingKit.alpha     = 0.61;
-						wait 0.0000001;
-					}
-					self setClientDvar( "cg_drawgun", 1 );
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
-					self enableweapons();
-					self unlink();
-					self.Stalling = undefined;
-					wait 0.01;
-				}
-				else if(isDefined(self.Stalling))
-				{
-					
-					self iprintln("disabled");
-					self unlink();
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self enableweapons();
-					self.Stalling = undefined;
-					wait 0.005;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall Bind ^1Off");
-		self.CPStall = undefined;
-	}
+    if(!isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall bind press [{+Actionslot 2}] to stall");
+        self.CPStall = true;
+        while(isDefined(self.CPStall))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.Stalling))
+                {
+                    self.Stalling = true;
+                    Stalled = spawn( "script_model", self.origin );
+                    self PlayerLinkToDelta(Stalled);
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self disableweapons();
+                    self.ChangingKit = createSecondaryProgressBar();
+                    self.KitText = createSecondaryProgressBarText();
+                    for(i=0;i<37;i++)
+                    {
+                        self.ChangingKit updateBar(i / 36);
+                        self.KitText setText("Capturing Crate");
+                        self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+                        self.KitText setPoint("CENTER", "CENTER", 0, -100);
+                        self.ChangingKit.color     = (0, 0, 0);
+                        self.ChangingKit.bar.color = self.BarColor;
+                        self.ChangingKit.alpha     = 0.61;
+                        wait 0.0000001;
+                    }
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+                    self enableweapons();
+                    self unlink();
+                    self.Stalling = undefined;
+                    wait 0.01;
+                }
+                else if(isDefined(self.Stalling))
+                {
+                    
+                    self iprintln("disabled");
+                    self unlink();
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self enableweapons();
+                    self.Stalling = undefined;
+                    wait 0.005;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall Bind ^1Off");
+        self.CPStall = undefined;
+    }
 }
 
 CPStallBind3()
 {
-	if(!isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall bind press [{+Actionslot 3}] to stall");
-		self.CPStall = true;
-		while(isDefined(self.CPStall))
-		{
-			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.Stalling))
-				{
-					self.Stalling = true;
-					Stalled = spawn( "script_model", self.origin );
-					self PlayerLinkToDelta(Stalled);
-					self setClientDvar( "cg_drawgun", 0 );
-					self disableweapons();
-					self.ChangingKit = createSecondaryProgressBar();
-					self.KitText = createSecondaryProgressBarText();
-					for(i=0;i<37;i++)
-					{
-						self.ChangingKit updateBar(i / 36);
-						self.KitText setText("Capturing Crate");
-						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
-						self.KitText setPoint("CENTER", "CENTER", 0, -100);
-						self.ChangingKit.color     = (0, 0, 0);
-						self.ChangingKit.bar.color = self.BarColor;
-						self.ChangingKit.alpha     = 0.61;
-						wait 0.0000001;
-					}
-					self setClientDvar( "cg_drawgun", 1 );
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
-					self enableweapons();
-					self unlink();
-					self.Stalling = undefined;
-					wait 0.01;
-				}
-				else if(isDefined(self.Stalling))
-				{
-					
-					self iprintln("disabled");
-					self unlink();
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self enableweapons();
-					self.Stalling = undefined;
-					wait 0.005;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall Bind ^1Off");
-		self.CPStall = undefined;
-	}
+    if(!isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall bind press [{+Actionslot 3}] to stall");
+        self.CPStall = true;
+        while(isDefined(self.CPStall))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.Stalling))
+                {
+                    self.Stalling = true;
+                    Stalled = spawn( "script_model", self.origin );
+                    self PlayerLinkToDelta(Stalled);
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self disableweapons();
+                    self.ChangingKit = createSecondaryProgressBar();
+                    self.KitText = createSecondaryProgressBarText();
+                    for(i=0;i<37;i++)
+                    {
+                        self.ChangingKit updateBar(i / 36);
+                        self.KitText setText("Capturing Crate");
+                        self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+                        self.KitText setPoint("CENTER", "CENTER", 0, -100);
+                        self.ChangingKit.color     = (0, 0, 0);
+                        self.ChangingKit.bar.color = self.BarColor;
+                        self.ChangingKit.alpha     = 0.61;
+                        wait 0.0000001;
+                    }
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+                    self enableweapons();
+                    self unlink();
+                    self.Stalling = undefined;
+                    wait 0.01;
+                }
+                else if(isDefined(self.Stalling))
+                {
+                    
+                    self iprintln("disabled");
+                    self unlink();
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self enableweapons();
+                    self.Stalling = undefined;
+                    wait 0.005;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall Bind ^1Off");
+        self.CPStall = undefined;
+    }
 }
 
 CPStallBind4()
 {
-	if(!isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall bind press [{+Actionslot 4}] to stall");
-		self.CPStall = true;
-		while(isDefined(self.CPStall))
-		{
-			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.Stalling))
-				{
-					self.Stalling = true;
-					Stalled = spawn( "script_model", self.origin );
-					self PlayerLinkToDelta(Stalled);
-					self setClientDvar( "cg_drawgun", 0 );
-					self disableweapons();
-					self.ChangingKit = createSecondaryProgressBar();
-					self.KitText = createSecondaryProgressBarText();
-					for(i=0;i<37;i++)
-					{
-						self.ChangingKit updateBar(i / 36);
-						self.KitText setText("Capturing Crate");
-						self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
-						self.KitText setPoint("CENTER", "CENTER", 0, -100);
-						self.ChangingKit.color     = (0, 0, 0);
-						self.ChangingKit.bar.color = self.BarColor;
-						self.ChangingKit.alpha     = 0.61;
-						wait 0.0000001;
-					}
-					self setClientDvar( "cg_drawgun", 1 );
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
-					self enableweapons();
-					self unlink();
-					self.Stalling = undefined;
-					wait 0.01;
-				}
-				else if(isDefined(self.Stalling))
-				{
-					
-					self iprintln("disabled");
-					self unlink();
-					self.ChangingKit destroyElem();
-					self.KitText destroyElem();
-					self enableweapons();
-					self.Stalling = undefined;
-					wait 0.005;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.CPStall))
-	{
-		self iprintln("Fake carepack stall Bind ^1Off");
-		self.CPStall = undefined;
-	}
+    if(!isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall bind press [{+Actionslot 4}] to stall");
+        self.CPStall = true;
+        while(isDefined(self.CPStall))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.Stalling))
+                {
+                    self.Stalling = true;
+                    Stalled = spawn( "script_model", self.origin );
+                    self PlayerLinkToDelta(Stalled);
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self disableweapons();
+                    self.ChangingKit = createSecondaryProgressBar();
+                    self.KitText = createSecondaryProgressBarText();
+                    for(i=0;i<37;i++)
+                    {
+                        self.ChangingKit updateBar(i / 36);
+                        self.KitText setText("Capturing Crate");
+                        self.ChangingKit setPoint("CENTER", "CENTER", 0, -85);
+                        self.KitText setPoint("CENTER", "CENTER", 0, -100);
+                        self.ChangingKit.color     = (0, 0, 0);
+                        self.ChangingKit.bar.color = self.BarColor;
+                        self.ChangingKit.alpha     = 0.61;
+                        wait 0.0000001;
+                    }
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self maps\mp\gametypes\_hardpoints::giveKillstreak(self.Nacstreak);
+                    self enableweapons();
+                    self unlink();
+                    self.Stalling = undefined;
+                    wait 0.01;
+                }
+                else if(isDefined(self.Stalling))
+                {
+                    
+                    self iprintln("disabled");
+                    self unlink();
+                    self.ChangingKit destroyElem();
+                    self.KitText destroyElem();
+                    self enableweapons();
+                    self.Stalling = undefined;
+                    wait 0.005;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.CPStall))
+    {
+        self iprintln("Fake carepack stall Bind ^1Off");
+        self.CPStall = undefined;
+    }
 }
 
 
 InvisibleWeap1()
 {
-	if(!isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind press [{+Actionslot 1}]");
-		self.InvisWeap = true;
-		while(isDefined(self.InvisWeap))
-		{
-			if(self actionslotonebuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.NotSeen))
-				{
-					self setClientDvar( "cg_drawgun", 0 );
-					self.NotSeen = true;
-					wait 0.01;
-				}
-				else if(isDefined(self.NotSeen))
-				{
-					
-					self setClientDvar( "cg_drawgun", 1 );
-					self.NotSeen = undefined;
-					wait 0.01;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind ^1Off");
-		self.InvisWeap = undefined;
-	}
+    if(!isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind press [{+Actionslot 1}]");
+        self.InvisWeap = true;
+        while(isDefined(self.InvisWeap))
+        {
+            if(self actionslotonebuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.NotSeen))
+                {
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self.NotSeen = true;
+                    wait 0.01;
+                }
+                else if(isDefined(self.NotSeen))
+                {
+                    
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.NotSeen = undefined;
+                    wait 0.01;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind ^1Off");
+        self.InvisWeap = undefined;
+    }
 }
 
 InvisibleWeap2()
 {
-	if(!isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind press [{+Actionslot 2}]");
-		self.InvisWeap = true;
-		while(isDefined(self.InvisWeap))
-		{
-			if(self actionslottwobuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.NotSeen))
-				{
-					self setClientDvar( "cg_drawgun", 0 );
-					self.NotSeen = true;
-					wait 0.01;
-				}
-				else if(isDefined(self.NotSeen))
-				{
-					
-					self setClientDvar( "cg_drawgun", 1 );
-					self.NotSeen = undefined;
-					wait 0.01;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind ^1Off");
-		self.InvisWeap = undefined;
-	}
+    if(!isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind press [{+Actionslot 2}]");
+        self.InvisWeap = true;
+        while(isDefined(self.InvisWeap))
+        {
+            if(self actionslottwobuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.NotSeen))
+                {
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self.NotSeen = true;
+                    wait 0.01;
+                }
+                else if(isDefined(self.NotSeen))
+                {
+                    
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.NotSeen = undefined;
+                    wait 0.01;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind ^1Off");
+        self.InvisWeap = undefined;
+    }
 }
 
 InvisibleWeap3()
 {
-	if(!isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind press [{+Actionslot 3}]");
-		self.InvisWeap = true;
-		while(isDefined(self.InvisWeap))
-		{
-			if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.NotSeen))
-				{
-					self setClientDvar( "cg_drawgun", 0 );
-					self.NotSeen = true;
-					wait 0.01;
-				}
-				else if(isDefined(self.NotSeen))
-				{
-					
-					self setClientDvar( "cg_drawgun", 1 );
-					self.NotSeen = undefined;
-					wait 0.01;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind ^1Off");
-		self.InvisWeap = undefined;
-	}
+    if(!isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind press [{+Actionslot 3}]");
+        self.InvisWeap = true;
+        while(isDefined(self.InvisWeap))
+        {
+            if(self actionslotthreebuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.NotSeen))
+                {
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self.NotSeen = true;
+                    wait 0.01;
+                }
+                else if(isDefined(self.NotSeen))
+                {
+                    
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.NotSeen = undefined;
+                    wait 0.01;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind ^1Off");
+        self.InvisWeap = undefined;
+    }
 }
 
 InvisibleWeap4()
 {
-	if(!isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind press [{+Actionslot 4}]");
-		self.InvisWeap = true;
-		while(isDefined(self.InvisWeap))
-		{
-			if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
-			{
-				if(!isDefined(self.NotSeen))
-				{
-					self setClientDvar( "cg_drawgun", 0 );
-					self.NotSeen = true;
-					wait 0.01;
-				}
-				else if(isDefined(self.NotSeen))
-				{
-					
-					self setClientDvar( "cg_drawgun", 1 );
-					self.NotSeen = undefined;
-					wait 0.01;
-				}
-				
-			}
-			wait .005;
-		}
-	}
-	else if(isDefined(self.InvisWeap))
-	{
-		self iprintln("Invisible weapon bind ^1Off");
-		self.InvisWeap = undefined;
-	}
+    if(!isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind press [{+Actionslot 4}]");
+        self.InvisWeap = true;
+        while(isDefined(self.InvisWeap))
+        {
+            if(self actionslotfourbuttonpressed() && self.MenuOpen == false)
+            {
+                if(!isDefined(self.NotSeen))
+                {
+                    self setClientDvar( "cg_drawgun", 0 );
+                    self.NotSeen = true;
+                    wait 0.01;
+                }
+                else if(isDefined(self.NotSeen))
+                {
+                    
+                    self setClientDvar( "cg_drawgun", 1 );
+                    self.NotSeen = undefined;
+                    wait 0.01;
+                }
+                
+            }
+            wait .005;
+        }
+    }
+    else if(isDefined(self.InvisWeap))
+    {
+        self iprintln("Invisible weapon bind ^1Off");
+        self.InvisWeap = undefined;
+    }
 }
 
-
-
-
+deathb()
+{
+    array=getEntArray("trigger_hurt","classname");
+    if(!isDefined(level.disableDeathBarriers))
+    {
+        for(m=0;m < array.size;m++)array[m].origin+=(0,100000,0);
+        level.disableDeathBarriers=true;
+    }
+    self iprintln("Death barriers removed");
+}
