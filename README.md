@@ -9,8 +9,20 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+3rd of March 2022
+////////////////////
+
+1. Added save bot spawn locations which will save through out rounds and work on multiple bots
+2. Added save client spawn locations does the same as the bot spawns but can be done on real players too
+3. Fixed save spawn location for yourself so you actually spawn there
+4. Save and load is now on by default and will save your position as well as your spawn location
+5. Added remove death barrier in admin menu
+6. Added toggle spawn text
+7. Fixed last stand bind now works with any weapon and doesnt kill in air
+
 22nd of February 2022
 ////////////////////
+
 1. Added perks menu
 2. Added  unset all perks
 3. Added set each perk
