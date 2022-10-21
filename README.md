@@ -9,6 +9,21 @@ https://discord.gg/jqYDedzMUs
 
 Recent Update Changes
 
+21st of October 2022
+////////////////////
+
+1. Fixed bugs
+2. Added self damage and damage repeater bind
+3. EB and Hit marker EB now stays on inbetween rounds (saves weapons, radius and delay)
+4. Fixed bot save and load
+5. Fixed save and load inbetween rounds
+6. Added options under the "more ammo options" menu 
+6a. Added take away 1 bullet
+6b. Added take half the clip
+6c. Added 1 bullet left
+7. Added option to change the killcam slowmo speeds
+https://github.com/roachnacs/redemption-bo1-gsc
+
 3rd of March 2022
 ////////////////////
 
